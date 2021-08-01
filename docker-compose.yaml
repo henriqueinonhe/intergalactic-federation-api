@@ -1,0 +1,26 @@
+#USE FOR DEVELOPMENT PURPOSES ONLY!
+
+version: "3.9"
+services: 
+  api:
+    container_name: intergalactic_federation_api
+    build:
+      context: ./api
+    depends_on: 
+      - db
+    volumes: 
+      - ./api:/home/app
+      - /home/app/node_modules
+      - /home/app/dist
+    ports:
+      - 3001:443
+    command: npm run watchAndRun
+
+  db:
+    image: mysql
+    container_name: intergalactic_federation_db
+    env_file: ./db/.env
+    ports:
+      - 3306:3306
+
+

@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "CommonJS",
+    "target": "ES5",
+    "allowJs": true,
+    "checkJs": true,
+    "sourceMap": true,
+    "strict": true,
+    "strictNullChecks": true, 
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "downlevelIteration": true,
+    "resolveJsonModule": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "typedocOptions": {
+    "out": "docs",
+    "inputFiles":["./src"],
+    "mode": "module",
+    "ignoreCompilerErrors": true,
+    "excludeNotExported": true
+  }
+}
