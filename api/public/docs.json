@@ -4,12 +4,471 @@
     "title": "IntergalacticFederationAPI",
     "version": "1.0"
   },
+  "tags": [
+    {
+      "name": "Pilots"
+    },
+    {
+      "name": "Ships"
+    },
+    {
+      "name": "Contracts"
+    },
+    {
+      "name": "Resources"
+    },
+    {
+      "name": "Reports"
+    }
+  ],
   "servers": [
     {
       "url": "http://localhost:3001"
     }
   ],
-  "paths": {},
+  "paths": {
+    "/pilots": {
+      "post": {
+        "summary": "",
+        "operationId": "post-pilots",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pilot"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PilotCreationData"
+              }
+            }
+          },
+          "description": ""
+        },
+        "tags": [
+          "Pilots"
+        ]
+      }
+    },
+    "/ships": {
+      "post": {
+        "summary": "",
+        "operationId": "post-ships",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ship"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipCreationData"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Ships"
+        ]
+      }
+    },
+    "/contracts": {
+      "post": {
+        "summary": "",
+        "operationId": "post-contracts",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contract"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractCreationData"
+              }
+            }
+          }
+        },
+        "tags": [
+          "Contracts"
+        ]
+      },
+      "get": {
+        "summary": "",
+        "operationId": "get-contracts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Contract"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/CursorPaginationMetadata"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "status"
+          }
+        ],
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/pilots/{id}/travel": {
+      "put": {
+        "summary": "",
+        "operationId": "put-pilots-:id-travel",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pilot"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "destinationPlanetId": {
+                    "$ref": "#/components/schemas/Planet"
+                  }
+                },
+                "required": [
+                  "destinationPlanetId"
+                ]
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pilots"
+        ]
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/pilots/{id}/refuel": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "put": {
+        "summary": "",
+        "operationId": "put-pilots-id-refuel",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pilot"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "amount"
+                ]
+              }
+            }
+          },
+          "description": ""
+        },
+        "tags": [
+          "Pilots"
+        ]
+      }
+    },
+    "/pilots/{id}/acceptContract": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "put": {
+        "summary": "",
+        "operationId": "put-pilots-id-acceptContract",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contract"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contractId": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "contractId"
+                ]
+              }
+            }
+          }
+        },
+        "tags": [
+          "Pilots"
+        ]
+      }
+    },
+    "/reports/planetsResourcesSummary": {
+      "get": {
+        "summary": "Your GET endpoint",
+        "tags": [
+          "Reports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "planet": {
+                        "$ref": "#/components/schemas/Planet"
+                      },
+                      "sent": {
+                        "type": "object",
+                        "required": [
+                          "food",
+                          "minerals",
+                          "water"
+                        ],
+                        "properties": {
+                          "food": {
+                            "type": "number"
+                          },
+                          "minerals": {
+                            "type": "number"
+                          },
+                          "water": {
+                            "type": "number"
+                          }
+                        }
+                      },
+                      "received": {
+                        "type": "object",
+                        "required": [
+                          "food",
+                          "minerals",
+                          "water"
+                        ],
+                        "properties": {
+                          "food": {
+                            "type": "number"
+                          },
+                          "minerals": {
+                            "type": "number"
+                          },
+                          "water": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "planet",
+                      "sent",
+                      "received"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-reports-planetsResourcesSummary"
+      }
+    },
+    "/reports/pilotsResourcesSummary": {
+      "get": {
+        "summary": "Your GET endpoint",
+        "tags": [
+          "Reports"
+        ],
+        "responses": {},
+        "operationId": "get-reports-pilotsResourcesSummary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pilot": {
+                      "$ref": "#/components/schemas/Pilot"
+                    },
+                    "food": {
+                      "type": "number"
+                    },
+                    "minerals": {
+                      "type": "number"
+                    },
+                    "water": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "pilot",
+                    "food",
+                    "minerals",
+                    "water"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/transactionsLedger": {
+      "get": {
+        "summary": "Your GET endpoint",
+        "tags": [
+          "Reports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "description",
+                      "value"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-reports-transactionsLedger"
+      }
+    }
+  },
   "components": {
     "schemas": {
       "Pilot": {
@@ -31,11 +490,19 @@
           "credits": {
             "type": "number"
           },
-          "location": {
+          "currentLocation": {
             "$ref": "#/components/schemas/Planet"
           },
           "ship": {
-            "$ref": "#/components/schemas/Ship"
+            "oneOf": [
+              {
+                "properties": {},
+                "nullable": true
+              },
+              {
+                "$ref": "#/components/schemas/Ship"
+              }
+            ]
           }
         },
         "required": [
@@ -44,7 +511,7 @@
           "name",
           "age",
           "credits",
-          "location",
+          "currentLocation",
           "ship"
         ]
       },
@@ -83,7 +550,10 @@
             "type": "string"
           },
           "payload": {
-            "type": "string"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Resource"
+            }
           },
           "originPlanet": {
             "$ref": "#/components/schemas/Planet"
@@ -93,6 +563,27 @@
           },
           "value": {
             "type": "number"
+          },
+          "contractee": {
+            "oneOf": [
+              {
+                "properties": {},
+                "nullable": true
+              },
+              {
+                "$ref": "#/components/schemas/Pilot"
+              }
+            ]
+          },
+          "fulfilledAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
           }
         },
         "required": [
@@ -101,7 +592,11 @@
           "payload",
           "originPlanet",
           "destinationPlanet",
-          "value"
+          "value",
+          "contractee",
+          "fulfilledAt",
+          "createAt",
+          "updatedAt"
         ]
       },
       "Resource": {
@@ -134,7 +629,11 @@
           "name": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
       },
       "TravelData": {
         "title": "TravelData",
@@ -159,6 +658,104 @@
           "originPlanet",
           "destinationPlanet",
           "fuelConsumption"
+        ]
+      },
+      "PilotCreationData": {
+        "title": "PilotCreationData",
+        "type": "object",
+        "properties": {
+          "certification": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "age": {
+            "type": "number"
+          },
+          "credits": {
+            "type": "number"
+          },
+          "currentLocationId": {
+            "type": "string"
+          },
+          "shipId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "certification",
+          "name",
+          "age",
+          "credits",
+          "currentLocationId"
+        ]
+      },
+      "ShipCreationData": {
+        "title": "ShipCreationData",
+        "type": "object",
+        "properties": {
+          "fuelCapacity": {
+            "type": "number"
+          },
+          "fuelLevel": {
+            "type": "number"
+          },
+          "weightCapacity": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "fuelCapacity",
+          "fuelLevel",
+          "weightCapacity"
+        ]
+      },
+      "ContractCreationData": {
+        "title": "ContractCreationData",
+        "type": "object",
+        "properties": {
+          "descripton": {
+            "type": "string"
+          },
+          "payloadIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "originPlanetId": {
+            "type": "string"
+          },
+          "destinationPlanetId": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "descripton",
+          "payloadIds",
+          "originPlanetId",
+          "destinationPlanetId",
+          "value"
+        ]
+      },
+      "CursorPaginationMetadata": {
+        "title": "PaginationMetadata",
+        "type": "object",
+        "properties": {
+          "nextPageLink": {
+            "type": "string"
+          },
+          "previousPageLink": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nextPageLink",
+          "previousPageLink"
         ]
       }
     }
