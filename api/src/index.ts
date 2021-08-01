@@ -2,6 +2,7 @@ import express from "express";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import { env } from "./env";
+import { handleError } from "./middlewares/handleError";
 import cors from "cors";
 import https from "https";
 import fs from "fs";
@@ -23,6 +24,7 @@ import fs from "fs";
     res.send("Ok");
   });
 
+  app.use(handleError);
   
   if(env.USE_HTTPS === "true") {
     const server = https.createServer({
