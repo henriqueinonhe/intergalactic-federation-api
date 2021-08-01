@@ -11,6 +11,156 @@
   ],
   "paths": {},
   "components": {
-    "schemas": {}
+    "schemas": {
+      "Pilot": {
+        "title": "Pilot",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "certification": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "age": {
+            "type": "number"
+          },
+          "credits": {
+            "type": "number"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "ship": {
+            "$ref": "#/components/schemas/Ship"
+          }
+        },
+        "required": [
+          "id",
+          "certification",
+          "name",
+          "age",
+          "credits",
+          "location",
+          "ship"
+        ]
+      },
+      "Ship": {
+        "title": "Ship",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fuelCapacity": {
+            "type": "number"
+          },
+          "fuelLevel": {
+            "type": "number"
+          },
+          "weightCapacity": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "fuelCapacity",
+          "fuelLevel",
+          "weightCapacity"
+        ]
+      },
+      "Contract": {
+        "title": "Contracts",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "string"
+          },
+          "originPlanet": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "destinationPlanet": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "payload",
+          "originPlanet",
+          "destinationPlanet",
+          "value"
+        ]
+      },
+      "Resource": {
+        "title": "Resource",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "weight"
+        ]
+      },
+      "Planet": {
+        "title": "Planet",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "TravelData": {
+        "title": "TravelData",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "originPlanet": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "destinationPlanet": {
+            "$ref": "#/components/schemas/Planet"
+          },
+          "fuelConsumption": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "originPlanet",
+          "destinationPlanet",
+          "fuelConsumption"
+        ]
+      }
+    }
   }
 }
