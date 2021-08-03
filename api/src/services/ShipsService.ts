@@ -8,6 +8,7 @@ export interface ShipCreationData {
   fuelCapacity : number;
   fuelLevel : number;
   weightCapacity : number;
+  currentWeight : number;
 }
 
 const shipCreationDataSchema = Joi.object<ShipCreationData>({
@@ -26,6 +27,12 @@ const shipCreationDataSchema = Joi.object<ShipCreationData>({
   weightCapacity: Joi.number()
     .integer()
     .positive()
+    .required(),
+
+  currentWeight: Joi.number()
+    .integer()
+    .positive()
+    .max(Joi.ref("weightCapacity"))
     .required()
 
 }).required();
@@ -33,9 +40,11 @@ export class ShipsService {
   public static async createShip(shipCreationData : ShipCreationData) : Promise<Ship> {
     const validationErrorEntries = this.validateShipCreationData(shipCreationData);
     if(validationErrorEntries.length !== 0) {
-      throw new ValidationError("Invalid ship creation data!", 
-                                "InvalidShipCreationData",
-                                validationErrorEntries);
+      throw new ValidationError(
+        "Invalid ship creation data!", 
+        "InvalidShipCreationData",
+        validationErrorEntries
+      );
     }
 
     const shipsRepository = getRepository(Ship);

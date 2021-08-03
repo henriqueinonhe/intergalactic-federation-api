@@ -28,6 +28,12 @@ export class Ship {
   })
   public weightCapacity : number;
 
+  @Column({
+    type: "int",
+    nullable: false
+  })
+  public currentWeight : number;
+
   @OneToOne(() => Pilot, pilot => pilot.ship)
   public pilot : Pilot;
 

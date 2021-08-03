@@ -3,6 +3,8 @@ import { Pilot } from "./Pilot";
 import { Planet } from "./Planet";
 import { v4 as uuid } from "uuid";
 import { Resource } from "./Resource";
+import { decimalTransformer } from "../helpers/decimalTransformer";
+import Big from "big.js"; 
 
 @Entity("Contracts")
 export class Contract {
@@ -40,9 +42,10 @@ export class Contract {
     type: "decimal",
     precision: 21,
     scale: 4,
-    nullable: false
+    nullable: false,
+    transformer: decimalTransformer
   })
-  public value : string;
+  public value : Big;
 
   @Column({
     type: "varchar",

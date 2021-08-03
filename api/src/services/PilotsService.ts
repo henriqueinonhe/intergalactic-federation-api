@@ -1,10 +1,11 @@
 import Joi from "joi";
 import { capitalize } from "lodash";
-import { getRepository } from "typeorm";
+import { getRepository, IsNull } from "typeorm";
 import { Contract } from "../entities/Contract";
 import { Pilot } from "../entities/Pilot";
 import { Planet } from "../entities/Planet";
 import { Ship } from "../entities/Ship";
+import { TravellingData } from "../entities/TravellingData";
 import { ValidationErrorEntry, ValidationError } from "../exceptions/ValidationError";
 import { isLuhnValid } from "../helpers/luhn";
 import { precisionNumberRegex } from "../helpers/precisionNumbers";
@@ -19,7 +20,6 @@ export interface PilotCreationData {
 }
 
 export interface TravelParameters {
-  originPlanetId : string;
   destinationPlanetId : string;
 }
 
@@ -175,8 +175,119 @@ export class PilotsService {
 
   public static async travel(pilotId : string, 
                              travelParameters : TravelParameters) : Promise<Pilot> {
-    //TODO
-    return {} as any;
+    const {
+      destinationPlanetId
+    } = travelParameters;
+
+    const validationError = new ValidationError(
+      "Travel error!",
+      "TravelError"
+    );
+
+    const pilotsRepository = getRepository(Pilot);
+    const pilot = await pilotsRepository.findOne(pilotId, {
+      relations: ["ship", "currentLocation"]
+    });
+
+    if(!pilot) {
+      validationError.addEntry({
+        message: `There is no pilot associated with this id "${pilotId}"!`,
+        code: "PilotNotFound"
+      });
+
+      throw validationError;
+    }
+
+    if(!pilot!.ship) {
+      validationError.addEntry({
+        message: `This pilot has no ship!`,
+        code: "PilotHasNoShip"
+      });
+
+      throw validationError;
+    }
+
+    const planetsRepository = getRepository(Planet);
+    const originPlanetId = pilot.currentLocationId;
+    const originPlanet = pilot.currentLocation;
+    const destinationPlanet = await planetsRepository.findOne(destinationPlanetId);
+
+    if(originPlanetId === destinationPlanetId) {
+      validationError.addEntry({
+        message: `Origin and destination planets must be different!`,
+        code: "OriginAndDestinationAreEqual"
+      });
+
+      throw validationError;
+    }
+
+    if(!originPlanet) {
+      validationError.addEntry({
+        message: `There is no planet associated with this id "${originPlanetId}"!`,
+        code: "PlanetNotFound"
+      });
+
+      throw validationError;
+    }
+
+    if(!destinationPlanet) {
+      validationError.addEntry({
+        message: `There is no planet associated with this id "${destinationPlanetId}"!`,
+        code: "PlanetNotFound"
+      });
+
+      throw validationError;
+    }
+
+    const travellingDataRepository = getRepository(TravellingData);
+    const travellingData = await travellingDataRepository.findOne({
+      where: {
+        originPlanetId,
+        destinationPlanetId
+      }
+    });
+
+    if(!travellingData) {
+      validationError.addEntry({
+        message: `It is not possible to travel from ${originPlanet!.name} to ${destinationPlanet!.name}`,
+        code: "TravelImpossible"
+      });
+
+      throw validationError;
+    }
+
+    if(pilot.ship.fuelLevel < travellingData.fuelConsumption) {
+      validationError.addEntry({
+        message: `This travel requires ${travellingData.fuelConsumption} fuel \
+        units however the ship currently only has ${pilot.ship.fuelLevel}!`,
+        code: "NotEnoughFuel"
+      });
+
+      throw validationError;
+    }
+
+    const contractsRepository = getRepository(Contract);
+    const eligibleContracts = await contractsRepository.find({
+      where: {
+        contracteeId: pilot.id,
+        fulfilledAt: IsNull(),
+        originPlanetId,
+        destinationPlanetId
+      },
+      relations: ["payload"]
+    });
+
+    pilot.ship.fuelLevel -= travellingData.fuelConsumption;
+    pilot.currentLocation = destinationPlanet;
+    eligibleContracts.forEach(contract => {
+      // pilot.credits NEED LIBRARY TO HANDLE MONEY
+      contract.fulfilledAt = new Date().toISOString();
+      contract.payload.forEach(resource => {
+        pilot.ship!.currentWeight -= resource.weight;
+      });
+    });
+    
+    return pilot;
   }
 
   public static async refuel(pilotId : string, 

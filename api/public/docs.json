@@ -700,12 +700,16 @@
           },
           "weightCapacity": {
             "type": "number"
+          },
+          "currentWeight": {
+            "type": "number"
           }
         },
         "required": [
           "fuelCapacity",
           "fuelLevel",
-          "weightCapacity"
+          "weightCapacity",
+          "currentWeight"
         ]
       },
       "ContractCreationData": {

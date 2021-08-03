@@ -1,9 +1,11 @@
 import { Column, CreateDateColumn, Entity, JoinColumn,  ManyToOne, OneToMany, OneToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { v4 as uuid } from "uuid";
+import { decimalTransformer } from "../helpers/decimalTransformer";
 import { Contract } from "./Contract";
 import { Planet } from "./Planet";
 import { Refill } from "./Refill";
 import { Ship } from "./Ship";
+import Big from "big.js";
 
 @Entity("Pilots")
 export class Pilot {
@@ -34,9 +36,10 @@ export class Pilot {
     type: "decimal",
     precision: 21,
     scale: 4,
-    nullable: false
+    nullable: false,
+    transformer: decimalTransformer
   })
-  public credits : string;
+  public credits : Big;
 
   @Column({
     type: "varchar",
