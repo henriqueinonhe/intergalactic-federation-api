@@ -6,6 +6,7 @@ import { handleError } from "./middlewares/handleError";
 import cors from "cors";
 import https from "https";
 import fs from "fs";
+import { router } from "./routes";
 
 (async () => {
   try {
@@ -24,6 +25,7 @@ import fs from "fs";
     res.send("Ok");
   });
 
+  app.use(router);
   app.use(handleError);
   
   if(env.USE_HTTPS === "true") {

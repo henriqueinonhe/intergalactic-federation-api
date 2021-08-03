@@ -23,7 +23,7 @@
   ],
   "servers": [
     {
-      "url": "http://localhost:3001"
+      "url": "https://localhost:3001"
     }
   ],
   "paths": {
@@ -47,8 +47,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {}
+                "$ref": "#/components/schemas/PilotCreationData"
               }
             },
             "application/xml": {
@@ -635,7 +634,7 @@
           "name"
         ]
       },
-      "TravelData": {
+      "TravellingData": {
         "title": "TravelData",
         "type": "object",
         "properties": {

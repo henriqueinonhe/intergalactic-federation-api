@@ -4,7 +4,7 @@ import { PilotsController } from "./controllers/PilotsController";
 import { ReportsController } from "./controllers/ReportsController";
 import { ShipsController } from "./controllers/ShipsController";
 
-const router = express.Router();
+export const router = express.Router();
 
 //Pilots
 router.route("/pilots")
