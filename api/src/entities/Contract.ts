@@ -4,7 +4,7 @@ import { Planet } from "./Planet";
 import { v4 as uuid } from "uuid";
 import { Resource } from "./Resource";
 
-@Entity()
+@Entity("Contracts")
 export class Contract {
   @PrimaryColumn({
     type: "varchar",

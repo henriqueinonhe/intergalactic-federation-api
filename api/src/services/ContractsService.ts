@@ -10,7 +10,7 @@ export interface GetContractsQuery {
 }
 
 export class ContractsService {
-  public static async createContract(contract : ContractCreationData) : Promise<Contract> {
+  public static async createContract(contractCreationData : ContractCreationData) : Promise<Contract> {
     return {} as any;
   }
 

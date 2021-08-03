@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid";
 import { Contract } from "./Contract";
 import { Pilot } from "./Pilot";
 
-@Entity()
+@Entity("Planets")
 export class Planet {
   @PrimaryColumn({
     type: "varchar",

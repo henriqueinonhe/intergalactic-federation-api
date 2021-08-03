@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { Planet } from "./Planet";
 
-@Entity()
+@Entity("TravellingData")
 export class TravellingData {
   @PrimaryColumn({
     type: "varchar",

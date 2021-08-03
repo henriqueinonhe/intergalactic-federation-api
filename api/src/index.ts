@@ -7,6 +7,7 @@ import cors from "cors";
 import https from "https";
 import fs from "fs";
 import { router } from "./routes";
+import compression from "compression";
 
 (async () => {
   try {
@@ -20,6 +21,7 @@ import { router } from "./routes";
   app.use(express.json());
   app.use(express.static("public"));
   app.use(cors());
+  app.use(compression());
   
   app.get("/health", (req, res) => {
     res.send("Ok");
