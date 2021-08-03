@@ -30,10 +30,10 @@ router.route("/contracts")
 
 //Reports
 router.route("/reports/planetsResourcesSummary")
-  .get(ReportsController.planetsResourcesSummary);
+  .get(ReportsController.getPlanetsResourcesSummary);
 
 router.route("/reports/pilotsResourcesSummary")
-  .get(ReportsController.pilotsResourcesSummary);
+  .get(ReportsController.getPilotsResourcesSummary);
 
 router.route("/reports/transactionsLedger")
-  .get(ReportsController.transactionsLedger);
+  .get(ReportsController.getTransactionsLedger);
