@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { capitalize, zip } from "lodash";
-import { getRepository } from "typeorm";
+import { getRepository, IsNull, Not } from "typeorm";
 import { Contract } from "../entities/Contract";
 import { Planet } from "../entities/Planet";
 import { Resource } from "../entities/Resource";
@@ -16,10 +16,10 @@ export interface ContractCreationData {
   value : string;
 }
 
-export type ContractStatus = "Open" | "Fulfilled" | "In Effect";
+export type ContractStatus = "Any" | "Open" | "Fulfilled" | "In Effect";
 
 export interface GetContractsQuery {
-  status ?: Array<ContractStatus>;
+  status ?: ContractStatus;
 }
 
 const contractCreationDataSchema = Joi.object({
@@ -46,7 +46,7 @@ const contractCreationDataSchema = Joi.object({
 
 const getContractQuerySchema = Joi.object({
   status: Joi.array()
-    .items(Joi.string())
+    .valid("Any", "Open", "Fulfilled", "In Effect")
 });
 
 export class ContractsService {
@@ -169,7 +169,68 @@ export class ContractsService {
     };
   }
 
+  private static async validateGetContractsQuery(query ?: GetContractsQuery) : Promise<ValidationError> {
+    const validationErrorEntries : Array<ValidationErrorEntry> = [];
+
+    const { error } = getContractQuerySchema.validate(query);
+
+    if(error) {
+      validationErrorEntries.push(...error.details.map(entry => ({
+        message: entry.message,
+        code: `InvalidConctractCreationData${capitalize(entry.context!.key)}`
+      })));
+    }
+
+    return new ValidationError(
+      "Invalid query!",
+      "InvalidGetContractsQuery",
+      validationErrorEntries
+    );
+  }
+
   public static async getContracts(query ?: GetContractsQuery) : Promise<PaginatedEntity<Contract>> {
-    return {} as any;
+    const error = await this.validateGetContractsQuery(query);
+
+    if(error.hasErrors()) {
+      throw error;
+    }
+
+    const {
+      status = "Any"
+    } = query ?? {};
+
+    const whereClause = (() => {
+      switch(status) {
+      case "Any":
+        return {};
+  
+      case "Fulfilled":
+        return {
+          fulfilledAt: Not(IsNull())
+        };
+        
+      case "In Effect":
+        return {
+          contracteeId: Not(IsNull()),
+          fulfilledAt: IsNull()
+        };
+  
+      case "Open":
+        return {
+          contracteeId: IsNull()
+        };
+      }
+    })();
+    
+    const contractsRepository = getRepository(Contract);
+    const contracts = await contractsRepository.find({
+      where: whereClause,
+      order: {
+        createdAt: "DESC"
+      }
+    });
+
+    //TODO Pagination
+    return contracts  as any;
   }
 }

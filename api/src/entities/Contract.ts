@@ -56,6 +56,12 @@ export class Contract {
   @OneToMany(() => Resource, resource => resource.contract)
   public payload : Array<Resource>;
 
+  @Column({
+    type: "timestamp",
+    nullable: true
+  })
+  public fulfilledAt : string | null;
+
   @CreateDateColumn({
     type: "timestamp",
     nullable: false
