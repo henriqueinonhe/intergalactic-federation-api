@@ -7,7 +7,7 @@ export class ContractsController {
 
     const createdContract = await ContractsService.createContract(contractCreationData);
 
-    res.send(201).send(createdContract);
+    res.status(201).send(createdContract);
     next();
   });
 

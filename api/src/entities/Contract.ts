@@ -54,7 +54,7 @@ export class Contract {
   public contractee : Pilot | null;
 
   @OneToMany(() => Resource, resource => resource.contract)
-  public resources : Array<Resource>;
+  public payload : Array<Resource>;
 
   @CreateDateColumn({
     type: "timestamp",

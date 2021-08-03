@@ -712,7 +712,7 @@
         "title": "ContractCreationData",
         "type": "object",
         "properties": {
-          "descripton": {
+          "description": {
             "type": "string"
           },
           "payloadIds": {
@@ -732,7 +732,7 @@
           }
         },
         "required": [
-          "descripton",
+          "description",
           "payloadIds",
           "originPlanetId",
           "destinationPlanetId",

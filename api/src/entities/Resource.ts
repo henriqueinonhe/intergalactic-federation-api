@@ -28,7 +28,7 @@ export class Resource {
   })
   public contractId : string | null;
   
-  @ManyToOne(() => Contract, contract => contract.resources)
+  @ManyToOne(() => Contract, contract => contract.payload)
   public contract : Contract | null;
 
   @CreateDateColumn({
