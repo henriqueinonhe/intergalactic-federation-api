@@ -1,0 +1,1 @@
+export const precisionNumberRegex = /^\d{0,21}(\.\d{1,4})?$/;

@@ -18,20 +18,20 @@ export class Contract {
   })
   public description : string;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: false
-  // })
-  // public originPlanetId : string;
+  @Column({
+    type: "varchar",
+    nullable: false
+  })
+  public originPlanetId : string;
 
   @ManyToOne(() => Planet, planet => planet.originContracts)
   originPlanet : Planet;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: false
-  // })
-  // public destinationPlanetId : string;
+  @Column({
+    type: "varchar",
+    nullable: false
+  })
+  public destinationPlanetId : string;
 
   @ManyToOne(() => Planet, planet => planet.destinationContracts)
   public destinationPlanet : Planet;
@@ -44,11 +44,11 @@ export class Contract {
   })
   public value : string;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: true
-  // })
-  // public contracteeId : string | null;
+  @Column({
+    type: "varchar",
+    nullable: true
+  })
+  public contracteeId : string | null;
 
   @ManyToOne(() => Pilot, pilot => pilot.contracts)
   public contractee : Pilot | null;

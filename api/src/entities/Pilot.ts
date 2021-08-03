@@ -38,20 +38,20 @@ export class Pilot {
   })
   public credits : string;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: false
-  // })
-  // public currentLocationId : string;
+  @Column({
+    type: "varchar",
+    nullable: false
+  })
+  public currentLocationId : string;
 
   @ManyToOne(() => Planet, planet => planet.currentPilots)
   public currentLocation : Planet;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: false
-  // })
-  // public shipId : string | null;
+  @Column({
+    type: "varchar",
+    nullable: false
+  })
+  public shipId : string | null;
 
   @OneToOne(() => Ship, ship => ship.pilot)
   @JoinColumn()

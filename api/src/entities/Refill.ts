@@ -16,11 +16,11 @@ export class Refill {
   })
   public amount : number;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: false
-  // })
-  // public pilotId : string;
+  @Column({
+    type: "varchar",
+    nullable: false
+  })
+  public pilotId : string;
 
   @ManyToOne(() => Pilot, pilot => pilot.refills)
   public pilot : Pilot;

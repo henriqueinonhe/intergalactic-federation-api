@@ -20,6 +20,7 @@ const shipCreationDataSchema = Joi.object<ShipCreationData>({
     .integer()
     .positive()
     .allow(0)
+    .max(Joi.ref("fuelCapacity"))
     .required(),
 
   weightCapacity: Joi.number()

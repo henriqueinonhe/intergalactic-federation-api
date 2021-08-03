@@ -9,20 +9,20 @@ export class TravellingData {
   })
   public id : string;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: false
-  // })
-  // public originPlanetId : string;
+  @Column({
+    type: "varchar",
+    nullable: false
+  })
+  public originPlanetId : string;
 
   @ManyToOne(() => Planet)
   public originPlanet : Planet;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: false
-  // })
-  // public destinationPlanetId : string;
+  @Column({
+    type: "varchar",
+    nullable: false
+  })
+  public destinationPlanetId : string;
 
   @ManyToOne(() => Planet)
   public destinationPlanet : Planet;

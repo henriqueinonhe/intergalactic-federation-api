@@ -22,11 +22,11 @@ export class Resource {
   })
   public weight : number;
 
-  // @Column({
-  //   type: "varchar",
-  //   nullable: true
-  // })
-  // public contractId : string | null;
+  @Column({
+    type: "varchar",
+    nullable: true
+  })
+  public contractId : string | null;
   
   @ManyToOne(() => Contract, contract => contract.resources)
   public contract : Contract | null;
