@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { Contract } from "./Contract";
 import { v4 as uuid } from "uuid";
 
+@Entity("Resources")
 export class Resource {
   @PrimaryColumn({
     type: "varchar",
@@ -27,7 +28,7 @@ export class Resource {
   // })
   // public contractId : string | null;
   
-  @ManyToOne(() => Contract/*, contract => contract.resources*/)
+  @ManyToOne(() => Contract, contract => contract.resources)
   public contract : Contract | null;
 
   @CreateDateColumn({

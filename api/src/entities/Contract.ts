@@ -53,8 +53,8 @@ export class Contract {
   @ManyToOne(() => Pilot, pilot => pilot.contracts)
   public contractee : Pilot | null;
 
-  // @OneToMany(() => Resource, resource => resource.contract)
-  // public resources : Array<Resource>;
+  @OneToMany(() => Resource, resource => resource.contract)
+  public resources : Array<Resource>;
 
   @CreateDateColumn({
     type: "timestamp",

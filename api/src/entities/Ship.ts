@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, OneToOne, PrimaryColumn, UpdateDateCo
 import { v4 as uuid } from "uuid";
 import { Pilot } from "./Pilot";
 
-@Entity()
+@Entity("Ships")
 export class Ship {
   @PrimaryColumn({
     type: "varchar",

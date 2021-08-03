@@ -23,7 +23,7 @@
   ],
   "servers": [
     {
-      "url": "https://localhost:3001"
+      "url": "http://localhost:3001"
     }
   ],
   "paths": {
@@ -451,7 +451,7 @@
                         "type": "string"
                       },
                       "value": {
-                        "type": "number"
+                        "type": "string"
                       }
                     },
                     "required": [
@@ -487,7 +487,7 @@
             "type": "number"
           },
           "credits": {
-            "type": "number"
+            "type": "string"
           },
           "currentLocation": {
             "$ref": "#/components/schemas/Planet"
@@ -495,7 +495,6 @@
           "ship": {
             "oneOf": [
               {
-                "properties": {},
                 "nullable": true
               },
               {
@@ -561,12 +560,11 @@
             "$ref": "#/components/schemas/Planet"
           },
           "value": {
-            "type": "number"
+            "type": "string"
           },
           "contractee": {
             "oneOf": [
               {
-                "properties": {},
                 "nullable": true
               },
               {
@@ -673,7 +671,7 @@
             "type": "number"
           },
           "credits": {
-            "type": "number"
+            "type": "string"
           },
           "currentLocationId": {
             "type": "string"
@@ -730,7 +728,7 @@
             "type": "string"
           },
           "value": {
-            "type": "number"
+            "type": "string"
           }
         },
         "required": [
