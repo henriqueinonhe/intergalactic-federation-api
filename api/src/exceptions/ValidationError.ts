@@ -7,8 +7,8 @@ export class ValidationError extends BaseError {
     this.entries = entries;
   }
 
-  public addEntry(entry : ValidationErrorEntry) : void {
-    this.entries = [...this.entries, entry];
+  public addEntries(...entries : Array<ValidationErrorEntry>) : void {
+    this.entries = [...this.entries, ...entries];
   }
 
   public hasErrors() : boolean {

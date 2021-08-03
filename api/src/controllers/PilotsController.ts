@@ -16,7 +16,7 @@ export class PilotsController {
 
     const pilot = await PilotsService.travel(pilotId, travelParameters);
     
-    res.send(200).send(pilot);
+    res.status(200).send(pilot);
     next();
   });
 
@@ -25,8 +25,8 @@ export class PilotsController {
     const refuelParameters = req.body;
 
     const pilot = await PilotsService.refuel(pilotId, refuelParameters);
-    
-    res.send(200).send(pilot);
+
+    res.status(200).send(pilot);
     next();
   });
 
@@ -37,7 +37,7 @@ export class PilotsController {
     const contract = await PilotsService.acceptContract(pilotId,
                                                         acceptContractParameters);
 
-    res.send(200).send(contract);
+    res.status(200).send(contract);
     next();
   });
 }

@@ -9,6 +9,8 @@ import { TravellingData } from "../entities/TravellingData";
 import { ValidationErrorEntry, ValidationError } from "../exceptions/ValidationError";
 import { isLuhnValid } from "../helpers/luhn";
 import { precisionNumberRegex } from "../helpers/precisionNumbers";
+import Big from "big.js";
+import { Refill } from "../entities/Refill";
 
 export interface PilotCreationData {
   certification : string;
@@ -31,7 +33,7 @@ export interface AcceptContractParameters {
   contractId : number;
 }
 
-const pilotCreationDataSchema = Joi.object({
+const pilotCreationDataSchema = Joi.object<PilotCreationData>({
   certification: Joi.string()
     .regex(/^\d{7}$/)
     .required(),
@@ -57,7 +59,16 @@ const pilotCreationDataSchema = Joi.object({
 
 }).required();
 
+const refuelParametersSchema = Joi.object<RefuelParameters>({
+  amount: Joi.number()
+    .integer()
+    .positive()
+    .required()
+}).required();
+
 export class PilotsService {
+  public static refuelCostPerUnit : Big = Big("7");
+
   public static async createPilot(pilotCreationData : PilotCreationData) : Promise<Pilot> {
     const {
       error,
@@ -190,7 +201,7 @@ export class PilotsService {
     });
 
     if(!pilot) {
-      validationError.addEntry({
+      validationError.addEntries({
         message: `There is no pilot associated with this id "${pilotId}"!`,
         code: "PilotNotFound"
       });
@@ -199,7 +210,7 @@ export class PilotsService {
     }
 
     if(!pilot!.ship) {
-      validationError.addEntry({
+      validationError.addEntries({
         message: `This pilot has no ship!`,
         code: "PilotHasNoShip"
       });
@@ -213,7 +224,7 @@ export class PilotsService {
     const destinationPlanet = await planetsRepository.findOne(destinationPlanetId);
 
     if(originPlanetId === destinationPlanetId) {
-      validationError.addEntry({
+      validationError.addEntries({
         message: `Origin and destination planets must be different!`,
         code: "OriginAndDestinationAreEqual"
       });
@@ -222,7 +233,7 @@ export class PilotsService {
     }
 
     if(!originPlanet) {
-      validationError.addEntry({
+      validationError.addEntries({
         message: `There is no planet associated with this id "${originPlanetId}"!`,
         code: "PlanetNotFound"
       });
@@ -231,7 +242,7 @@ export class PilotsService {
     }
 
     if(!destinationPlanet) {
-      validationError.addEntry({
+      validationError.addEntries({
         message: `There is no planet associated with this id "${destinationPlanetId}"!`,
         code: "PlanetNotFound"
       });
@@ -248,7 +259,7 @@ export class PilotsService {
     });
 
     if(!travellingData) {
-      validationError.addEntry({
+      validationError.addEntries({
         message: `It is not possible to travel from ${originPlanet!.name} to ${destinationPlanet!.name}`,
         code: "TravelImpossible"
       });
@@ -257,9 +268,8 @@ export class PilotsService {
     }
 
     if(pilot.ship.fuelLevel < travellingData.fuelConsumption) {
-      validationError.addEntry({
-        message: `This travel requires ${travellingData.fuelConsumption} fuel \
-        units however the ship currently only has ${pilot.ship.fuelLevel}!`,
+      validationError.addEntries({
+        message: `This travel requires ${travellingData.fuelConsumption} fuel units however the ship currently only has ${pilot.ship.fuelLevel}!`,
         code: "NotEnoughFuel"
       });
 
@@ -280,20 +290,105 @@ export class PilotsService {
     pilot.ship.fuelLevel -= travellingData.fuelConsumption;
     pilot.currentLocation = destinationPlanet;
     eligibleContracts.forEach(contract => {
-      // pilot.credits NEED LIBRARY TO HANDLE MONEY
+      pilot.credits = pilot.credits.plus(contract.value);
       contract.fulfilledAt = new Date().toISOString();
       contract.payload.forEach(resource => {
         pilot.ship!.currentWeight -= resource.weight;
       });
     });
     
+    const shipsRepository = getRepository(Ship);
+    await Promise.all([
+      pilotsRepository.save(pilot),
+      shipsRepository.save(pilot.ship),
+      contractsRepository.save(eligibleContracts)
+    ]);
+    
     return pilot;
   }
 
   public static async refuel(pilotId : string, 
                              refuelParameters : RefuelParameters) : Promise<Pilot> {
-    //TODO
-    return {} as any;
+    
+    const {
+      amount
+    } = refuelParameters;
+
+    const validationError = new ValidationError(
+      "Invalid refuel tryout!",
+      "InvalidRefuelTryout"
+    );
+    const { error } = refuelParametersSchema.validate(refuelParameters);
+
+    if(error) {
+      validationError.addEntries(...error.details.map(entry => ({
+        message: entry.message,
+        code: `InvalidRefuel${capitalize(entry.context!.key)}`
+      })));
+
+      throw validationError;
+    }
+
+    const pilotsRepository = getRepository(Pilot);
+    const pilot = await pilotsRepository.findOne(pilotId, {
+      relations: ["ship"]
+    });
+    if(!pilot) {
+      validationError.addEntries({
+        message: `There is no pilot associated with this id "${pilotId}"!`,
+        code: "PilotNotFound"
+      });
+
+      throw validationError;
+    }
+
+    const refuelCost = this.refuelCostPerUnit.times(Big(amount));
+    if(pilot.credits.lt(refuelCost)) {
+      validationError.addEntries({
+        message: `The cost of the refuel is ${refuelCost.toJSON()} credits but this pilot currently only has ${pilot.credits.toJSON()}!`,
+        code: "InsuficientCredits"
+      });
+
+      throw validationError;
+    }
+
+    const ship = pilot.ship;
+    if(!ship) {
+      validationError.addEntries({
+        message: `This pilot has no ship!`,
+        code: "PilotHasNoShip"
+      });
+
+      throw validationError;
+    }
+
+    const fuelDelta = ship.fuelCapacity - ship.fuelLevel;
+    if(amount > fuelDelta) {
+      validationError.addEntries({
+        message: `The amount of fuel units (${amount}) is greater than the current amount this ship can receive (${fuelDelta})!`,
+        code: "FuelOverflow"
+      });
+
+      throw validationError;
+    }
+
+    const refillsRepository = getRepository(Refill);
+    const refill = refillsRepository.create({
+      amount,
+      pilotId: pilot.id
+    });
+
+    ship.fuelLevel += amount;
+    pilot.credits = pilot.credits.minus(refuelCost);
+
+    const shipsRepository = getRepository(Ship);
+    await Promise.all([
+      pilotsRepository.save(pilot),
+      shipsRepository.save(ship),
+      refillsRepository.save(refill)
+    ]);
+
+    return pilot;
   }
 
   public static async acceptContract(pilotId : string, 

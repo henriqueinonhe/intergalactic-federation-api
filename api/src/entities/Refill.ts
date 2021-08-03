@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, UpdateDateC
 import { Pilot } from "./Pilot";
 import { v4 as uuid } from "uuid";
 
-@Entity("Refill")
+@Entity("Refills")
 export class Refill {
   @PrimaryColumn({
     type: "varchar",
