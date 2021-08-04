@@ -31,8 +31,8 @@ export function randomList<T>(generator : () => T, length : number) : Array<T> {
 export function randomShipCreationData() : ShipCreationData {
   const weightCapacity = randomNumber(1, 10000);
   const fuelCapacity = randomNumber(1, 10000);
-  const currentWeight = randomNumber(weightCapacity, 10000);
-  const fuelLevel = randomNumber(fuelCapacity, 10000);
+  const currentWeight = randomNumber(1, weightCapacity);
+  const fuelLevel = randomNumber(1, fuelCapacity);
 
   return {
     weightCapacity,
@@ -115,7 +115,8 @@ export function randomContractCreationData(originPlanetId : string,
 export function randomContract(originPlanetId : string, 
                                destinationPlanetId : string,
                                payloadIds : Array<string>) : Contract {
-                                 const connection = getConnection("Test Connection");
+                                 
+  const connection = getConnection("Test Connection");
   const contractsRepository = connection.getRepository(Contract);
   return contractsRepository.create({
     ...randomContractCreationData(originPlanetId, destinationPlanetId, payloadIds)
@@ -128,7 +129,7 @@ export function randomResource(contractId ?: string) : Resource {
   return resourcesRepository.create({
     name: randomName(),
     weight: randomNumber(1, 200),
-    contractId: contractId
+    contractId
   });
 }
 

@@ -37,12 +37,12 @@ import compression from "compression";
     }, app);
     
     server.listen(env.PORT, () => {
-      console.log(`API up at ${process.env.PORT}!`);
+      console.log(`API up at ${env.PORT}!`);
     });
   }
   else {
     app.listen(env.PORT, () => {
-      console.log(`API up at ${process.env.PORT}!`);
+      console.log(`API up at ${env.PORT}!`);
     });
   }
   

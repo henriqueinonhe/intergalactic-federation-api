@@ -12,7 +12,7 @@
   },
   "scripts": {
     "buildAndRun": "tsc -p . && node ./dist/index.js",
-    "watchAndRun": "tsc -p . --watch & npx nodemon ./dist/index.js",
+    "watchAndRun": "tsc -p . --watch & npx nodemon ./dist/src/index.js",
     "typeorm": "npx tsc -p . && npx typeorm",
     "test": "jest --collectCoverage"
   },

@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { capitalize } from "lodash";
+import { upperFirst } from "lodash";
 import { getRepository, IsNull } from "typeorm";
 import { Contract } from "../entities/Contract";
 import { Pilot } from "../entities/Pilot";
@@ -116,7 +116,7 @@ export class PilotsService {
     if(error) {
       validationErrorEntries.push(...error.details.map(entry => ({
         message: entry.message,
-        code: `InvalidPilotCreationData${capitalize(entry.context!.key)}`
+        code: `InvalidPilotCreationData${upperFirst(entry.context!.key)}`
       })));
     }
 
@@ -319,7 +319,7 @@ export class PilotsService {
     if(error) {
       validationError.addEntries(...error.details.map(entry => ({
         message: entry.message,
-        code: `InvalidRefuel${capitalize(entry.context!.key)}`
+        code: `InvalidRefuel${upperFirst(entry.context!.key)}`
       })));
 
       throw validationError;
@@ -403,7 +403,7 @@ export class PilotsService {
     if(error) {
       validationError.addEntries(...error.details.map(entry => ({
         message: entry.message,
-        code: `InvalidAcceptContract${capitalize(entry.context!.key)}`
+        code: `InvalidAcceptContract${upperFirst(entry.context!.key)}`
       })));
                                   
       throw validationError;

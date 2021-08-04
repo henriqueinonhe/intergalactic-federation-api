@@ -1,7 +1,7 @@
 import { Ship } from "../entities/Ship";
 import { ValidationError, ValidationErrorEntry } from "../exceptions/ValidationError";
 import Joi from "joi";
-import { capitalize } from "lodash";
+import { upperFirst } from "lodash";
 import { getRepository } from "typeorm";
 
 export interface ShipCreationData {
@@ -58,9 +58,10 @@ export class ShipsService {
     const { error } = shipCreationDataSchema.validate(shipCreationData);
 
     if(error) {
+      console.log(error.details);
       return error.details.map(entry => ({
         message: entry.message,
-        code: `InvalidShipCreationData${capitalize(entry.context!.key)}`
+        code: `InvalidShipCreationData${upperFirst(entry.context!.key)}`
       }));
     }
 

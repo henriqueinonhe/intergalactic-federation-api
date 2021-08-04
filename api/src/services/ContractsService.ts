@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { capitalize, zip } from "lodash";
+import { upperFirst, zip } from "lodash";
 import { getRepository, IsNull, Not } from "typeorm";
 import { Contract } from "../entities/Contract";
 import { Planet } from "../entities/Planet";
@@ -28,7 +28,8 @@ const contractCreationDataSchema = Joi.object({
     .required(),
 
   payloadIds: Joi.array()
-    .items(Joi.string())
+    .items(Joi.string().required())
+    .min(1)
     .required(),
   
   originPlanetId: Joi.string()
@@ -61,8 +62,13 @@ export class ContractsService {
     }
 
     const contractsRepository = getRepository(Contract);
+    const resourcesRepository = getRepository(Resource);
+
     const createdContract = await contractsRepository.save(contract);
-    createdContract.payload.forEach(resource => resource.contractId = createdContract.id);
+    createdContract.payload.forEach(async resource => {
+      resource.contractId = createdContract.id;
+    });
+    await Promise.all(createdContract.payload.map(resource => resourcesRepository.save(resource)));
 
     return createdContract;
   }
@@ -118,7 +124,7 @@ export class ContractsService {
     if(error) {
       validationErrorEntries.push(...error.details.map(entry => ({
         message: entry.message,
-        code: `InvalidConctractCreationData${capitalize(entry.context!.key)}`
+        code: `InvalidContractCreationData${upperFirst(entry.context!.key)}`
       })));
     }
 
@@ -177,7 +183,7 @@ export class ContractsService {
     if(error) {
       validationErrorEntries.push(...error.details.map(entry => ({
         message: entry.message,
-        code: `InvalidConctractCreationData${capitalize(entry.context!.key)}`
+        code: `InvalidContractCreationData${upperFirst(entry.context!.key)}`
       })));
     }
 
