@@ -237,15 +237,6 @@ export class PilotsService {
       throw validationError;
     }
 
-    if(!originPlanet) {
-      validationError.addEntries({
-        message: `There is no planet associated with this id "${originPlanetId}"!`,
-        code: "PlanetNotFound"
-      });
-
-      throw validationError;
-    }
-
     if(!destinationPlanet) {
       validationError.addEntries({
         message: `There is no planet associated with this id "${destinationPlanetId}"!`,
