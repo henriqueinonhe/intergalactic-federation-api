@@ -19,6 +19,9 @@
     },
     {
       "name": "Reports"
+    },
+    {
+      "name": "Planets"
     }
   ],
   "servers": [
@@ -504,6 +507,30 @@
           }
         },
         "description": "Pre Conditions:\n- Name must be a non empty string\n- Weight must be a zero or positive integer"
+      }
+    },
+    "/planets": {
+      "get": {
+        "summary": "Your GET endpoint",
+        "tags": [
+          "Planets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Planet"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-planets"
       }
     }
   },
