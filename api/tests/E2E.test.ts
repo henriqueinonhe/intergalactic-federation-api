@@ -350,6 +350,7 @@ test("Full application flow", async () => {
   // with both the pilot and ship entities embbeded.
 
   const acceptedContract = acceptedContractResponse.data as Contract;
+  const acceptedContractPilot = acceptedContract.contractee!;
   const acceptedContractShip = acceptedContract.contractee!.ship!;
   const fueledShipWeight = updatedPilot.ship!.currentWeight;
   const acceptedContractShipWeight = acceptedContractShip.currentWeight;
@@ -358,4 +359,33 @@ test("Full application flow", async () => {
   
   expect(acceptedContract.contractee!.name).toBe(updatedPilot.name);
   expect(fueledShipWeight + acceptedContractPayloadWeight).toBe(acceptedContractShipWeight);
+
+  /***************************************************************/
+  /***************************************************************/
+  /* 6. Grant credits to the pilot after fulfilling the contract */
+  /***************************************************************/
+  /***************************************************************/
+
+  // Now we can make the pilot travel to the accepted contract
+  // destination and then collect his reward!
+
+  // As made sure that the contract's destination was only
+  // a travel away form the origin we only need a single trip.
+  const contractFulfillmentTravelResponse = await travel(acceptedContractPilot.id, {
+    destinationPlanetId: contractDestinationId
+  });
+
+  const fulfilledContractPilot = contractFulfillmentTravelResponse.data as Pilot;
+  const fulfilledContractShip = fulfilledContractPilot.ship!;
+
+  // We need to make sure that the pilot received 
+  // the credits, and the payload was offloaded
+  // from the ship.
+
+  const acceptedContractValue = Big(acceptedContract.value);
+  const acceptedContractPilotCredits = Big(acceptedContractPilot.credits);
+  const fulfilledContractPilotCredits = Big(fulfilledContractPilot.credits);
+  expect(acceptedContractPilotCredits.add(acceptedContractValue).toString()).toBe(fulfilledContractPilotCredits.toString());
+
+  expect(fueledShipWeight).toBe(fulfilledContractShip.currentWeight);
 });
