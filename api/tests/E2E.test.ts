@@ -3,10 +3,12 @@ import { sample, sampleSize, zip, random as randomNumber } from "lodash";
 import { Contract } from "../src/entities/Contract";
 import { Pilot } from "../src/entities/Pilot";
 import { Planet } from "../src/entities/Planet";
+import { Resource } from "../src/entities/Resource";
 import { Ship } from "../src/entities/Ship";
+import { ContractCreationData } from "../src/services/ContractsService";
 import { PilotsService } from "../src/services/PilotsService";
 import { clearDb, close, connection } from "./testHelpers/db";
-import { createContract, createPilot, createResource, createShip, getContracts, getPlanets, refuel, travel } from "./testHelpers/endpoints";
+import { acceptContract, createContract, createPilot, createResource, createShip, getContracts, getPlanets, refuel, travel } from "./testHelpers/endpoints";
 import { randomContractCreationData, randomList, randomPilotCreationData, randomResourceCreationData, randomShipCreationData } from "./testHelpers/random";
 
 beforeAll(async () => {
@@ -298,5 +300,62 @@ test("Full application flow", async () => {
     expect(correspondingContract).toEqual(correspondingContract);
   });
 
+  /*********************************/
+  /*********************************/
+  /* 5. Accept transport contracts */
+  /*********************************/
+  /*********************************/
+
+  // To accept a transport contract the pilot 
+  // must be in the contract's origin planet
+  // and also he/she must have enough
+  // available weight capacity to
+  // hold the contract's payload.
+
+  // As contracts and players are randomly
+  // generated, to make sure we'll have
+  // a contract that can be instantly 
+  // accepted (i.e. requires no beforehand travelling
+  // to get to the origin planet) we'll 
+  // created a contract tailored to the
+  // pilot's current location.
+
+  const resourcesForContractToBeAcceptedCreationData = 
+    randomList(randomResourceCreationData, 5);
+  const resourcesForContractToBeAcceptedResponses = await Promise.all(
+    resourcesForContractToBeAcceptedCreationData.map(resource => createResource(resource))
+  );
+  const resourcesForContractToBeAccepted = resourcesForContractToBeAcceptedResponses
+    .map(response => response.data  as Resource);
+
+  const possibleContractDestinations = Object.keys(travelTable[updatedPilot.currentLocation.name as keyof typeof travelTable]);
+  const contractDestination = sample(possibleContractDestinations)!;
+  const contractDestinationId = existingPlanets.find(planet => planet.name === contractDestination)!.id;
+  const contractToBeAcceptedCreationData : ContractCreationData = {
+    ...randomContractCreationData(
+      updatedPilot.currentLocationId,
+      contractDestinationId,
+      resourcesForContractToBeAccepted.map(resource => resource.id)
+    )
+  };
+
+  const contractToBeAccepted = (await createContract(contractToBeAcceptedCreationData)).data as Contract;
   
+  // Now that we have our contract, let's accept it!
+  const acceptedContractResponse = await acceptContract(updatedPilot.id, {
+    contractId: contractToBeAccepted.id
+  });
+  
+  // This endpoint returns the accepted contract
+  // with both the pilot and ship entities embbeded.
+
+  const acceptedContract = acceptedContractResponse.data as Contract;
+  const acceptedContractShip = acceptedContract.contractee!.ship!;
+  const fueledShipWeight = updatedPilot.ship!.currentWeight;
+  const acceptedContractShipWeight = acceptedContractShip.currentWeight;
+  const acceptedContractPayloadWeight = acceptedContract.payload
+    .reduce((accum, entry) => accum + entry.weight, 0);
+  
+  expect(acceptedContract.contractee!.name).toBe(updatedPilot.name);
+  expect(fueledShipWeight + acceptedContractPayloadWeight).toBe(acceptedContractShipWeight);
 });

@@ -1,6 +1,6 @@
 import { AxiosResponse } from "axios";
 import { ContractCreationData, GetContractsQuery } from "../../src/services/ContractsService";
-import { PilotCreationData, RefuelParameters, TravelParameters } from "../../src/services/PilotsService";
+import { AcceptContractParameters, PilotCreationData, RefuelParameters, TravelParameters } from "../../src/services/PilotsService";
 import { ResourceCreationData } from "../../src/services/ResourcesService";
 import { ShipCreationData } from "../../src/services/ShipsService";
 import { apiClient } from "./apiClient";
@@ -65,5 +65,14 @@ export async function refuel(pilotId : string, refuelParameters : RefuelParamete
     url: `/pilots/${pilotId}/refuel`,
     method: "PUT",
     data: refuelParameters
+  });
+}
+
+export async function acceptContract(pilotId : string, acceptContractParameters : AcceptContractParameters) 
+  : Promise<AxiosResponse> {
+  return await apiClient({
+    url: `/pilots/${pilotId}/acceptContract`,
+    method: "PUT",
+    data: acceptContractParameters
   });
 }

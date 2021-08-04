@@ -30,7 +30,7 @@ export interface RefuelParameters {
 }
 
 export interface AcceptContractParameters {
-  contractId : number;
+  contractId : string;
 }
 
 const pilotCreationDataSchema = Joi.object<PilotCreationData>({

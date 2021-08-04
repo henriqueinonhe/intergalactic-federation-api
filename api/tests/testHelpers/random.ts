@@ -31,10 +31,10 @@ export function randomList<T>(generator : () => T, length : number) : Array<T> {
 }
 
 export function randomShipCreationData() : ShipCreationData {
-  const weightCapacity = randomNumber(1, 10000);
+  const weightCapacity = randomNumber(100000, 1000000);
   const fuelCapacity = randomNumber(100000, 10000000); //FIXME
-  const currentWeight = randomNumber(1, weightCapacity);
-  const fuelLevel = randomNumber(1, fuelCapacity);
+  const currentWeight = randomNumber(100000, weightCapacity);
+  const fuelLevel = randomNumber(100000, fuelCapacity);
 
   return {
     weightCapacity,
