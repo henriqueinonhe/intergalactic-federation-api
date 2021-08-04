@@ -66,6 +66,11 @@ const refuelParametersSchema = Joi.object<RefuelParameters>({
     .required()
 }).required();
 
+const aceeptContractParametersSchema = Joi.object<AcceptContractParameters>({
+  contractId: Joi.string()
+    .required()
+}).required();
+
 export class PilotsService {
   public static refuelCostPerUnit : Big = Big("7");
 
@@ -393,7 +398,101 @@ export class PilotsService {
 
   public static async acceptContract(pilotId : string, 
                                      acceptContractParameters : AcceptContractParameters) : Promise<Contract> {
-    //TODO
-    return {} as any;
+    
+    const {
+      contractId
+    } = acceptContractParameters;
+                                  
+    const validationError = new ValidationError(
+      "Unable to accept contract!",
+      "UnableToAcceptContract"
+    );
+    const { error } = aceeptContractParametersSchema.validate(acceptContractParameters);
+
+    if(error) {
+      validationError.addEntries(...error.details.map(entry => ({
+        message: entry.message,
+        code: `InvalidAcceptContract${capitalize(entry.context!.key)}`
+      })));
+                                  
+      throw validationError;
+    }
+
+    const pilotsRepository = getRepository(Pilot);
+    const pilot = await pilotsRepository.findOne(pilotId, {
+      relations: ["ship"]
+    });
+    if(!pilot) {
+      validationError.addEntries({
+        message: `There is no pilot associated with this id "${pilotId}"!`,
+        code: "PilotNotFound"
+      });
+
+      throw validationError;
+    }
+
+    const contractsRepository = getRepository(Contract);
+    const contract = await contractsRepository.findOne(contractId, {
+      relations: ["payload"]
+    });
+    if(!contract) {
+      validationError.addEntries({
+        message: `There is no contract associated with this id "${pilotId}"!`,
+        code: "ContractNotFound"
+      });
+
+      throw validationError;
+    }
+
+    if(contract.fulfilledAt) {
+      validationError.addEntries({
+        message: `This contract has already been fulfilled!`,
+        code: "ContractAlreadyFulfilled"
+      });
+
+      throw validationError; 
+    }
+
+    const ship = pilot.ship;
+    if(!ship) {
+      validationError.addEntries({
+        message: `This pilot has no ship and thus cannot accept a contract!`,
+        code: "PilotHasNoShip"
+      });
+
+      throw validationError;
+    }
+
+    if(contract.originPlanetId !== pilot.currentLocationId) {
+      validationError.addEntries({
+        message: `A pilot must be in the contract's origin planet to accept it!`,
+        code: "PilotCurrentLocationAndContractOriginPlanetMismatch"
+      });
+
+      throw validationError;
+    }
+
+    const weightDelta = ship.weightCapacity = ship.currentWeight;
+    const payloadWeight = contract.payload
+      .reduce((accum, resource) => accum + resource.weight, 0);
+    if(weightDelta < payloadWeight) {
+      validationError.addEntries({
+        message: `The contract payload weight (${payloadWeight}) outweights the ship current's capacity (${weightDelta})!`,
+        code: "ContractPayloadTooHeavy"
+      });
+
+      throw validationError;
+    }
+
+    ship.currentWeight += payloadWeight;
+    contract.contractee = pilot;
+
+    const shipsRepository = getRepository(Ship);
+    await Promise.all([
+      shipsRepository.save(ship),
+      contractsRepository.save(contract)
+    ]);
+
+    return contract;
   }
 }

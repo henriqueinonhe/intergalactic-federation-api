@@ -1,5 +1,5 @@
 export function isLuhnValid(code : string) : boolean {
-  if(!/\d{2,}/.test(code)) {
+  if(!/^\d{2,}$/.test(code)) {
     throw Error("Luhn codes must be composed solely of digits \
     and must have at least one digit not including the check digit!");
   }
