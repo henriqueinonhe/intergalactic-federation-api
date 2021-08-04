@@ -64,7 +64,7 @@ export class ContractsService {
     const contractsRepository = getRepository(Contract);
     const resourcesRepository = getRepository(Resource);
 
-    const createdContract = await contractsRepository.save(contract);
+    const createdContract = await contractsRepository.save(contract!);
     createdContract.payload.forEach(async resource => {
       resource.contractId = createdContract.id;
     });
@@ -73,7 +73,6 @@ export class ContractsService {
     return createdContract;
   }
 
-  //FIXME EXTRACT TO Planets Service
   private static async findPlanet(planetId ?: string) : Promise<Planet | undefined> {
     const planetsRepository = getRepository(Planet);
     const planet = await planetsRepository.findOne(planetId);
@@ -115,17 +114,21 @@ export class ContractsService {
   }
 
   private static async validateConctractCreationData(contractCreationData : ContractCreationData) 
-    : Promise<{ error : ValidationError, contract : Contract }> {
+    : Promise<{ error : ValidationError, contract ?: Contract }> {
 
+    const validationError = new ValidationError(
+      "Invalid contract creation data!",
+      "InvalidContractCreationData"
+    );
     const { error } = contractCreationDataSchema.validate(contractCreationData);
 
-    const validationErrorEntries : Array<ValidationErrorEntry> = [];
-
     if(error) {
-      validationErrorEntries.push(...error.details.map(entry => ({
+      validationError.addEntries(...error.details.map(entry => ({
         message: entry.message,
         code: `InvalidContractCreationData${upperFirst(entry.context!.key)}`
       })));
+
+      return { error: validationError };
     }
 
     const {
@@ -139,11 +142,11 @@ export class ContractsService {
       resources
     } = await this.validatePayload(payload);
 
-    validationErrorEntries.push(...resourcesErrors);
+    validationError.addEntries(...resourcesErrors);
 
     const originPlanet = await this.findPlanet(originPlanetId);
     if(!originPlanet) {
-      validationErrorEntries.push({
+      validationError.addEntries({
         message: `There is no planet associated with this id "${originPlanetId}"!`,
         code: "PlanetNotFound"
       });
@@ -151,7 +154,7 @@ export class ContractsService {
 
     const destinationPlanet = await this.findPlanet(destinationPlanetId);
     if(!destinationPlanet) {
-      validationErrorEntries.push({
+      validationError.addEntries({
         message: `There is no planet associated with this id "${destinationPlanetId}"!`,
         code: "PlanetNotFound"
       });
@@ -166,11 +169,7 @@ export class ContractsService {
     });
     
     return {
-      error: new ValidationError(
-        "Invalid contract creation data!",
-        "InvalidContractCreationData",
-        validationErrorEntries
-      ),
+      error: validationError,
       contract
     };
   }

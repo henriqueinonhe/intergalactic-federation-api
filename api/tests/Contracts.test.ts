@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AxiosResponse } from "axios";
 import { sample, sampleSize, random as randomNumber } from "lodash";
 import RandExp from "randexp";
-import { DeepPartial, getConnection, getRepository, IsNull, Not } from "typeorm";
+import { DeepPartial, getConnection, IsNull, Not } from "typeorm";
 import { Contract } from "../src/entities/Contract";
 import { Planet } from "../src/entities/Planet";
 import { Resource } from "../src/entities/Resource";
@@ -227,6 +228,7 @@ describe("Create Contract", () => {
       "asdasd",
       0,
       234234,
+      null,
       {},
       [],
       [1, 4, 2],
@@ -287,6 +289,7 @@ describe("Create Contract", () => {
       "asdasd",
       0,
       234234,
+      null,
       {},
       [],
       [1, 4, 2],
@@ -304,26 +307,121 @@ describe("Create Contract", () => {
       }
     );
 
-    test("Origin planet id must reference an existing planet", async () => {
-      //TODO
-    });
+    const originPlanetsThatNeverWereIds = randomList(uuid, 10);
+    test.each(originPlanetsThatNeverWereIds)(
+      "Origin planet id must reference an existing planet, case %s", 
+      async (originPlanetThatNeverWasId) => {
+        const response =  await createContract({
+          ...await randomContractCreationDataWithDefaults(),
+          originPlanetId: originPlanetThatNeverWasId
+        });
 
-    test("Destination planet id must be a non empty string", async () => {
-      //TODO
-    });
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "PlanetNotFound"));
+      }
+    );
 
-    test("Destination planet id must reference an existing planet", async () => {
-      //TODO
-    });
+    const invalidDestinationPlanetIds = [
+      "",
+      "asdasd",
+      0,
+      234234,
+      null,
+      {},
+      [],
+      [1, 4, 2],
+      [1, "adsasd"]
+    ];
+    test.each(invalidDestinationPlanetIds)(
+      "Destination planet id must be a non empty string, case %s", 
+      async (invalidDestinationPlanetId) => {
+        const response = await createContract({
+          ...await randomContractCreationDataWithDefaults(),
+          destinationPlanetId: invalidDestinationPlanetId as any
+        });
 
-    test("Value must be a decimal", async () => {
-      //TODO
-    });
+        expect(response.status).toBe(422);
+      }
+    );
+
+    const destinationPlanetsThatNeverWereIds = randomList(uuid, 10);
+    test.each(destinationPlanetsThatNeverWereIds)(
+      "Destination planet id must reference an existing planet, case %s", 
+      async (destinationPlanetThatNeverWasId) => {
+        const response =  await createContract({
+          ...await randomContractCreationDataWithDefaults(),
+          destinationPlanetId: destinationPlanetThatNeverWasId
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "PlanetNotFound"));
+      }
+    );
+
+    const invalidDecimals = [
+      ...randomList(() => randomNumber(-10000, 10000), 20),
+      ".45345",
+      ""
+    ];
+    test.each(invalidDecimals)(
+      "Value must be a decimal", 
+      async (invalidDecimal) => {
+        const response = await createContract({
+          ...await randomContractCreationDataWithDefaults(),
+          value: invalidDecimal as any
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "InvalidContractCreationDataValue"));
+      }
+    );
   });
 
   describe("Post Conditions", () => {
+    function formatContract(contract : Contract) : DeepPartial<Contract> {
+      const {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        createdAt,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        updatedAt,
+        ...contractWithNoTimestamps
+      } = contract;
+
+      return {
+        ...contractWithNoTimestamps,
+        value: contract.value.toJSON()
+      };
+    }
+
     test("Contract is properly created", async () => {
-      //TODO
+      const connection = getConnection("Test Connection");
+      const resourcesRepository = connection.getRepository(Resource);
+      const contractsRepository = connection.getRepository(Contract);
+      const contractCreationData = await randomContractCreationDataWithDefaults();
+
+      const response = await createContract(contractCreationData);
+      expect(response.status).toBe(201);
+      
+      const createdContract = response.data as Contract;
+      const {
+        payloadIds,
+        ...contractCreationDataWithoutPayload
+      } = contractCreationData;
+      expect(createdContract).toMatchObject(contractCreationDataWithoutPayload);
+
+      const createdContractFromDb = await contractsRepository.findOne(createdContract.id);
+      expect(createdContract).toMatchObject(formatContract(createdContractFromDb!));
+
+      const assignedResources = await resourcesRepository.find({
+        where: { contractId: createdContract.id }
+      });
+
+      payloadIds.forEach(payloadId => {
+        expect(assignedResources.find(resource => resource.id === payloadId)).not.toBeUndefined();
+      });
     });
   });
 });
