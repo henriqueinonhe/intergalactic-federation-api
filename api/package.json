@@ -6,8 +6,9 @@
     "transform": {
       "^.+\\.[jt]sx?$": "ts-jest"
     },
+    "collectCoverage": true,
     "collectCoverageFrom": [
-      "tests"
+      "./src/**/*.ts"
     ]
   },
   "scripts": {

@@ -85,9 +85,10 @@ export class PilotsService {
     }
 
     const pilotsRepository = getRepository(Pilot);
-    await pilotsRepository.save(pilot);
+    const createdPilot = pilotsRepository.create(pilot!);
+    await pilotsRepository.save(createdPilot);
 
-    return pilot;
+    return createdPilot;
   }
 
   private static async findShip(shipId ?: string) : Promise<Ship | undefined> {
@@ -107,17 +108,25 @@ export class PilotsService {
   }
 
   private static async validatePilotCreationData(pilotCreationData : PilotCreationData) 
-    : Promise<{ error : ValidationError, pilot : Pilot }> {
+    : Promise<{ error : ValidationError, pilot ?: Pilot }> {
     
+
+    const validationError = new ValidationError(
+      "Invalid pilot creation data!",
+      "InvalidPilotCreationData"
+    );
+
     const { error } = pilotCreationDataSchema.validate(pilotCreationData);
 
-    const validationErrorEntries : Array<ValidationErrorEntry> = [];
-
     if(error) {
-      validationErrorEntries.push(...error.details.map(entry => ({
+      validationError.addEntries(...error.details.map(entry => ({
         message: entry.message,
         code: `InvalidPilotCreationData${upperFirst(entry.context!.key)}`
       })));
+
+      return {
+        error: validationError
+      };
     }
 
     const {
@@ -127,54 +136,66 @@ export class PilotsService {
     } = pilotCreationData;
 
     if(!isLuhnValid(certification)) {
-      validationErrorEntries.push({
+      validationError.addEntries({
         message: "Invalid certification checksum!",
         code: `InvalidPilotCertificationChecksum`
       });
-    }
 
+      return {
+        error: validationError
+      };
+    }
     const ship = await this.findShip(shipId);
     const shipNotFound = shipId && !ship;
     if(shipNotFound) {
-      validationErrorEntries.push({
+      validationError.addEntries({
         message: `There is not ship associated with this id "${shipId}"!`,
         code: "ShipNotFound"
       });
+
+      return {
+        error: validationError
+      };
     }
 
-    const shipHasOwner = ship?.pilot !== null;
+    const shipHasOwner = ship?.pilot;
     if(shipHasOwner) {
-      validationErrorEntries.push({
+      validationError.addEntries({
         message: `This ship already has an owner!`,
         code: "ShipAlreadyHasOwner"
       });
-    }
 
+      return {
+        error: validationError
+      };
+    }
     const currentLocation = await this.findPlanet(currentLocationId);
     if(!currentLocation) {
-      validationErrorEntries.push({
+      validationError.addEntries({
         message: `There is no planet associated with this id "${currentLocationId}"!`,
         code: "PlanetNotFound"
       });
-    }
 
+      return {
+        error: validationError
+      };
+    }
     const pilotsRepository = getRepository(Pilot);
     const certificationAlreadyExists = await pilotsRepository.findOne({
       where: { certification }
     }) !== undefined;
 
     if(certificationAlreadyExists) {
-      validationErrorEntries.push({
+      validationError.addEntries({
         message: `There is already a pilot with this certification "${certification}"!`,
         code: "CertificationAlreadyExists"
       });
+
+      return {
+        error: validationError
+      };
     }
     
-    const validationError = new ValidationError(
-      "Invalid pilot creation data!",
-      "InvalidPilotCreationData",
-      validationErrorEntries
-    );
     const createdPilot = pilotsRepository.create(
       {
         ...pilotCreationData,

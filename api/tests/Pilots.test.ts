@@ -1,59 +1,298 @@
-import { clearDb } from "./testHelpers/db";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { AxiosResponse } from "axios";
+import { sample, random as randomNumber } from "lodash";
+import { getConnection, IsNull, Not, SimpleConsoleLogger } from "typeorm";
+import { Pilot } from "../src/entities/Pilot";
+import { Planet } from "../src/entities/Planet";
+import { PilotCreationData } from "../src/services/PilotsService";
+import { apiClient } from "./testHelpers/apiClient";
+import { clearDb, connection, populateDb, close } from "./testHelpers/db";
+import { randomList, randomPilotCreationData } from "./testHelpers/random";
+import { checkHasValidationErrorEntryCode } from "./testHelpers/validationErrors";
+import { v4 as uuid } from "uuid";
+import { Ship } from "../src/entities/Ship";
+
+beforeAll(async () => {
+  await connection();
+});
 
 afterAll(async () => {
-  clearDb();
+  await close();
 });
 
 describe("Create Pilot", () => {
-  describe("Pre Conditions", () => {
-    test("Pilot certification must be a string with length 7 composed solely of digits", async () => {
-      //TODO
-    });
+  beforeAll(async () => {
+    await populateDb();
+  });
+  
+  afterAll(async () => {
+    await clearDb();
+  });
 
-    test("Pilot certification must have a valid Luhn's checksum", async () => {
-      //TODO
+  async function createPilot(pilotCreationData : PilotCreationData) : Promise<AxiosResponse> {
+    return await apiClient({
+      url: "/pilots",
+      method: "POST",
+      data: pilotCreationData
     });
+  }
+
+  async function randomPilotCreationDataWithDefaults() : Promise<PilotCreationData> {
+    const connection = getConnection("Test Connection");
+    const planetsRepository = connection.getRepository(Planet);
+    const existingPlanets = await planetsRepository.find({});
+    
+    return randomPilotCreationData(sample(existingPlanets)!.id);
+  }
+
+  describe("Pre Conditions", () => {
+
+    const invalidPilotCertifications = [
+      79927398713,
+      "5456145asdasd6134234",
+      null,
+      {},
+      [],
+      ["sdasdasd"],
+      ""
+    ];
+    test.each(invalidPilotCertifications)(
+      "Pilot certification must be a string with length 7 composed solely of digits, case %s", 
+      async (invalidPilotCertification) => {
+
+        const response = await createPilot({
+          ...await randomPilotCreationDataWithDefaults(),
+          certification: invalidPilotCertification as any
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "InvalidPilotCreationDataCertification"));
+      }
+    );
+
+    const pilotCertificationsWithInvalidChecksums = [
+      "79927398710",
+      "79927398711",
+      "79927398712",
+      "79927398714",
+      "79927398715",
+      "79927398716",
+      "79927398717",
+      "79927398718",
+      "79927398719"
+    ];
+    test.each(pilotCertificationsWithInvalidChecksums)(
+      "Pilot certification must have a valid Luhn's checksum, case %s", 
+      async (pilotCertificationWithInvalidChecksum) => {
+
+        const response = await createPilot({
+          ...await randomPilotCreationDataWithDefaults(),
+          certification: pilotCertificationWithInvalidChecksum
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "InvalidPilotCertificationChecksum"));
+      }
+    );
 
     test("Pilot certification must be unique among pilots", async () => {
-      //TODO
+      const connection = getConnection("Test Connection");
+      const pilotsRepository = connection.getRepository(Pilot);
+      const existingPilots = await pilotsRepository.find({take: 10});
+      const existingCertifications = existingPilots.map(pilot => pilot.certification);
+
+      const responses = await Promise.all(existingCertifications
+        .map(async certification => createPilot({
+          ... await randomPilotCreationDataWithDefaults(),
+          certification: certification!
+        })));
+      
+      responses.forEach(response => {
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "CertificationAlreadyExists"));
+      });
     });
 
-    test("Pilot name must be a non empty string composed solely of letters and whitespace", async () => {
-      //TODO
-    });
+    const invalidPilotNames = [
+      234,
+      "",
+      "sadasd 3",
+      "das*asdasd",
+      null,
+      {},
+      []
+    ];
+    test.each(invalidPilotNames)(
+      "Pilot name must be a non empty string composed solely of letters and whitespace, case %s", 
+      async (invalidPilotName) => {
+        const response = await createPilot({
+          ... await randomPilotCreationDataWithDefaults(),
+          name: invalidPilotName as any
+        });
 
-    test("Pilot age must be an integer greater or equal than 18", async () => {
-      //TODO
-    });
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "InvalidPilotCreationDataName"));
+      }
+    );
 
-    test("Pilot credits must be a decimal", async () => {
-      //TODO
-    });
+    const invalidPilotAges = [
+      -24,
+      17,
+      0,
+      null,
+      {},
+      []
+    ];
+    test.each(invalidPilotAges)(
+      "Pilot age must be an integer greater or equal than 18, case %s", 
+      async (invalidPilotAge) => {
+        const response = await createPilot({
+          ... await randomPilotCreationDataWithDefaults(),
+          age: invalidPilotAge as any
+        });
 
-    test("Pilot current location id must be a non empty string", async () => {
-      //TODO
-    });
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "InvalidPilotCreationDataAge"));
+      }
+    );
 
-    test("Pilot current location id must reference an existing planet", async () => {
-      //TODO
-    });
+    const invalidDecimals = [
+      ...randomList(() => randomNumber(-10000, 10000), 20),
+      ".45345",
+      ""
+    ];
+    test.each(invalidDecimals)(
+      "Pilot credits must be a decimal, case %s", 
+      async (invalidDecimal) => {
+        const response = await createPilot({
+          ...await randomPilotCreationDataWithDefaults(),
+          credits: invalidDecimal as any
+        });
 
-    test("Pilot ship id must either be undefined, null or a string", async () => {
-      //TODO
-    });
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "InvalidPilotCreationCredits"));
+      }
+    );
 
-    test("Pilot ship id, when not a nullable value, must reference an existing ship", async () => {
-      //TODO
-    });
+    const invalidCurrentLocationIds = [
+      "",
+      "asdasd",
+      0,
+      234234,
+      null,
+      {},
+      [],
+      [1, 4, 2],
+      [1, "adsasd"]
+    ];
+    test.each(invalidCurrentLocationIds)(
+      "Pilot current location id must be a non empty string, case %s", 
+      async (invalidCurrentLocationId) => {
+        const response =  await createPilot({
+          ... await randomPilotCreationDataWithDefaults(),
+          currentLocationId: invalidCurrentLocationId as any
+        });
+
+        expect(response.status).toBe(422);
+      }
+    );
+
+    const planetsThereNeverWereIds = randomList(uuid, 2);
+    test.each(planetsThereNeverWereIds)(
+      "Pilot current location id must reference an existing planet, case %s", 
+      async (planetThatNeverWasId) => {
+        const response = await createPilot({
+          ...await randomPilotCreationDataWithDefaults(),
+          currentLocationId: planetThatNeverWasId
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "PlanetNotFound"));
+      }
+    );
+
+    const invalidPilotShipIds = [
+      {},
+      [],
+      true
+    ];
+    test.each(invalidPilotShipIds)(
+      "Pilot ship id must either be undefined, null or a string, case %s", 
+      async (invalidPilotShipId) => {
+        const response = await createPilot({
+          ...await randomPilotCreationDataWithDefaults(),
+          shipId: invalidPilotShipId as any
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "InvalidPilotCreationDataShipId"));
+      }
+    );
+
+    const shipsThatNeverWereIds = randomList(uuid, 10);
+    test.each(shipsThatNeverWereIds)(
+      "Pilot ship id, when not a nullable value, must reference an existing ship, %s", 
+      async (shipThatNeverWasId) => {
+        const response = await createPilot({
+          ...await randomPilotCreationDataWithDefaults(),
+          shipId: shipThatNeverWasId
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "ShipNotFound"));
+      }
+    );
 
     test("Pilot ship id, when not a nullable value, must reference a ship that is unowned", async () => {
-      //TODO
+      const connection = getConnection("Test Connection");
+      const pilotsRepository = connection.getRepository(Pilot);
+      const ownedShipsIds = (await pilotsRepository.find({
+        select: ["shipId"],
+        where: { shipId: Not(IsNull()) }
+      })).map(pilot => pilot.shipId);
+
+      const responses = await Promise.all(ownedShipsIds
+        .map(async ownedShipId => createPilot({
+          ...await randomPilotCreationDataWithDefaults(),
+          shipId: ownedShipId!
+        })));
+      
+      responses.forEach(response => {
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "ShipAlreadyHasOwner"));
+      });
     });
   });
 
   describe("Post Conditions", () => {
     test("Pilot is properly created", async () => {
-      //TODO
+      const connection = getConnection("Test Connection");
+      const unownedShips = await connection.query(`
+        SELECT Ships.id, Pilots.shipId FROM Pilots
+        RIGHT JOIN Ships ON Ships.id = Pilots.shipId 
+        WHERE shipId IS NULL
+      `);
+
+      const pilotCreationData = {
+        ...await randomPilotCreationDataWithDefaults(),
+        shipId: sample(unownedShips)!.id
+      };
+
+      const response = await createPilot(pilotCreationData);
+      expect(response.status).toBe(201);
+
+      const createdPilot = response.data;
+      expect(createdPilot).toMatchObject(pilotCreationData);
     });
   });
 });

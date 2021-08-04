@@ -5,7 +5,6 @@ import { Contract } from "../entities/Contract";
 import { Planet } from "../entities/Planet";
 import { Resource } from "../entities/Resource";
 import { ValidationError, ValidationErrorEntry } from "../exceptions/ValidationError";
-import { PaginatedEntity } from "../helpers/paginatedEntity";
 import { precisionNumberRegex } from "../helpers/precisionNumbers";
 
 export interface ContractCreationData {
@@ -193,7 +192,7 @@ export class ContractsService {
     );
   }
 
-  public static async getContracts(query ?: GetContractsQuery) : Promise<PaginatedEntity<Contract>> {
+  public static async getContracts(query ?: GetContractsQuery) : Promise<Array<Contract>> {
     const error = await this.validateGetContractsQuery(query);
 
     if(error.hasErrors()) {
@@ -235,7 +234,6 @@ export class ContractsService {
       }
     });
 
-    //TODO Pagination
-    return contracts  as any;
+    return contracts;
   }
 }

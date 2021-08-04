@@ -1,1 +1,1 @@
-export const precisionNumberRegex = /^\d{1,17}(\.\d{1,4})?$/;
+export const precisionNumberRegex = /^([1-9]\d{0,16})(\.\d{1,4})?$/;

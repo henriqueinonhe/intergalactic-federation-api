@@ -35,7 +35,7 @@ export class Ship {
   public currentWeight : number;
 
   @OneToOne(() => Pilot, pilot => pilot.ship)
-  public pilot : Pilot;
+  public pilot : Pilot | null;
 
   @CreateDateColumn({
     type: "timestamp",

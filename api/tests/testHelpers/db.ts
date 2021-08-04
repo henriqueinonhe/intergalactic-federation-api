@@ -1,4 +1,4 @@
-import { sample, sampleSize, random as randomNumber, zip } from "lodash";
+import { sample, sampleSize, random as randomNumber } from "lodash";
 import { createConnection, getConnection, IsNull, Not } from "typeorm";
 import { Contract } from "../../src/entities/Contract";
 import { Pilot } from "../../src/entities/Pilot";
@@ -8,7 +8,7 @@ import { Resource } from "../../src/entities/Resource";
 import { Ship } from "../../src/entities/Ship";
 import { TravellingData } from "../../src/entities/TravellingData";
 import { env } from "../../src/env";
-import { randomContract, randomContractCreationData, randomList, randomPilot, randomRefill, randomResource, randomShip, randomUndefinable } from "./random";
+import { randomContract, randomList, randomPilot, randomRefill, randomResource, randomShip, randomUndefinable } from "./random";
 
 export async function connection() : Promise<void> {
   await createConnection({

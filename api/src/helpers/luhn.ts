@@ -25,5 +25,5 @@ export function generateLuhnCheckDigit(partialCode : string) : string {
   }
 
   const checksum = digitList.reduce((accumulator, value) => accumulator + value, 0);
-  return (10 - checksum).toString();
+  return ((10 - (checksum % 10)) % 10).toString();
 }
