@@ -1,12 +1,12 @@
+import Big from "big.js";
 import { sample, sampleSize, zip, random as randomNumber } from "lodash";
 import { Contract } from "../src/entities/Contract";
 import { Pilot } from "../src/entities/Pilot";
 import { Planet } from "../src/entities/Planet";
 import { Ship } from "../src/entities/Ship";
-import { PilotCreationData } from "../src/services/PilotsService";
-import { ShipCreationData } from "../src/services/ShipsService";
+import { PilotsService } from "../src/services/PilotsService";
 import { clearDb, close, connection } from "./testHelpers/db";
-import { createContract, createPilot, createResource, createShip, getPlanets } from "./testHelpers/endpoints";
+import { createContract, createPilot, createResource, createShip, getContracts, getPlanets, refuel, travel } from "./testHelpers/endpoints";
 import { randomContractCreationData, randomList, randomPilotCreationData, randomResourceCreationData, randomShipCreationData } from "./testHelpers/random";
 
 beforeAll(async () => {
@@ -19,7 +19,11 @@ afterAll(async () => {
 });
 
 test("Full application flow", async () => {
+  /***********************************************/
+  /***********************************************/
   /* 1. Add pilots and their ships to the system */
+  /***********************************************/
+  /***********************************************/
 
   // First we need to come up with a ship.
   // It doesn't really matter the parameters
@@ -78,8 +82,11 @@ test("Full application flow", async () => {
   // Here we have both our pilot and his ship
   // registered in the system!
 
-
+  /***********************************/
+  /***********************************/
   /* 2. Publish transport contracts */
+  /***********************************/
+  /***********************************/
 
   // Before publishing a contract we first need
   // to register the resources that will serve
@@ -152,4 +159,144 @@ test("Full application flow", async () => {
       expect(createdContractPayloadIds).toContain(payloadId);
     });
   });
+
+  /*****************************/
+  /*****************************/
+  /* 3. Travel between planets */
+  /*             AND           */
+  /* 7. Register a refuel      */
+  /*****************************/
+  /*****************************/
+
+  // Before we start with this functionality
+  // it is important to keep in mind that
+  // both planets and travelling data are
+  // currently fixed and inserted into the DB
+  // at the application's bootstrap.
+
+  // With this out of the way, let's see
+  // the travel possibilities/costs.
+
+  /**
+   * ---------------------------------------------
+   * | From    | Andvari | Demeter | Aqua | Calas |
+   * ----------------------------------------------
+   * | Andvari |    -    |    X    |  13  |  23   |
+   * ----------------------------------------------
+   * | Demeter |    X    |    -    |  22  |  25   |
+   * ----------------------------------------------
+   * | Aqua    |    X    |   30    |   -  |  12   |
+   * ----------------------------------------------
+   * | Calas   |    20   |   25    |  15  |   -   |
+   * ---------------------------------------------
+   */
+
+  // To make things easier on ourselves
+  // (and avoid path finding with graphs)
+  // let's create a representation of this table.
+  // (This table is also represented within the DB)
+
+  const travelTable = {
+    Andvari: {
+      Aqua: 13,
+      Calas: 23
+    },
+    Demeter: {
+      Aqua: 22,
+      Calas: 25
+    },
+    Aqua: {
+      Demeter: 30,
+      Calas: 12
+    },
+    Calas: {
+      Andvari: 20,
+      Demeter: 25,
+      Aqua: 15
+    }
+  };
+
+  // Now we'll randomly choose somewhere for
+  // our pilot to travel, based on the possibilities
+  // from where he currently is.
+
+  const pilotCurrentPlanetName = createdPilot.currentLocation.name;
+  const possibleDestinations = Object.keys(travelTable[pilotCurrentPlanetName as keyof typeof travelTable]);
+  const chosenDestination = sample(possibleDestinations)!;
+  const chosenDestinationId = existingPlanets.find(planet => planet.name === chosenDestination)!.id;
+
+  // Also as our ship was randomly generated, there's
+  // the possibility that it doesn't have suficient 
+  // fuel to do the trip.
+  // Therefore we'll refuel with a random (but greater than 100 units)
+  // amount to make sure that whatever the current fuel
+  // level is, we'll be able to travel.
+
+  // Oh, and don't worry about the pilot's credits
+  // as our randomly generated pilot already starts with
+  // at least 100000 credits.
+
+  // The baseline fuel capacity is really high as well.
+  // (For test subjects)
+
+  const refuelAmount = randomNumber(100, 10000);
+  const refuelResponse = await refuel(createdPilot.id, {
+    amount: refuelAmount
+  });
+
+  const refueledPilot = refuelResponse.data as Pilot;
+
+  // The refuel endpoint conveniently returns the
+  // updated pilot object, so we can inspect 
+  // the refuel actually had the expected outcome.
+  const creditsSpent = Big(refuelAmount).times(PilotsService.refuelCostPerUnit);
+  const remainingCredits = Big(createdPilot.credits).sub(creditsSpent);
+  expect(refueledPilot.credits).toBe(remainingCredits.toString());
+
+  const newFuelLevel = createdPilot.ship!.fuelLevel + refuelAmount;
+  expect(refueledPilot.ship!.fuelLevel).toBe(newFuelLevel);
+
+  // Time to travel!
+  const travelResponse = await travel(createdPilot.id, {
+    destinationPlanetId: chosenDestinationId
+  });
+  const updatedPilot = travelResponse.data as Pilot;
+
+  const fromPilotCurrentPlanetTravelCosts = travelTable[pilotCurrentPlanetName as keyof typeof travelTable];
+  const travelFuelCost = fromPilotCurrentPlanetTravelCosts[chosenDestination as keyof typeof fromPilotCurrentPlanetTravelCosts];
+  const fuelLevelAfterTravel = newFuelLevel - travelFuelCost;
+
+  expect(updatedPilot.currentLocation.name).toBe(chosenDestination);
+  expect(updatedPilot.ship!.fuelLevel).toBe(fuelLevelAfterTravel);
+
+  /**************************/
+  /**************************/
+  /* 4. List open contracts */
+  /**************************/
+  /**************************/
+
+  // There are four possible status to
+  // use to query contracts: 
+  // - Any -> All contracts
+  // - Open -> Open contracts
+  // - Fulfilled -> Closed/fulfilled contracts
+  // - In Effect -> Contracts accepted by pilots but not yet fulfilled
+
+  // Currently in this test no contrats have been
+  // either accepted, therefore they are all open.
+  const fetchedContractsResponse = await getContracts({
+    status: "Open"
+  });
+  const fetchedContracts = fetchedContractsResponse.data as Array<Contract>;
+  
+  // Now we must match the contracts we registered with the contracts
+  // we fetched.
+  fetchedContracts.map(fetchedContract => {
+    const correspondingContract = createdContracts
+      .find(createdContract => createdContract.id === fetchedContract.id);
+
+    expect(correspondingContract).toEqual(correspondingContract);
+  });
+
+  
 });

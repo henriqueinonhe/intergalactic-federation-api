@@ -1,6 +1,6 @@
 import { AxiosResponse } from "axios";
 import { ContractCreationData, GetContractsQuery } from "../../src/services/ContractsService";
-import { PilotCreationData, TravelParameters } from "../../src/services/PilotsService";
+import { PilotCreationData, RefuelParameters, TravelParameters } from "../../src/services/PilotsService";
 import { ResourceCreationData } from "../../src/services/ResourcesService";
 import { ShipCreationData } from "../../src/services/ShipsService";
 import { apiClient } from "./apiClient";
@@ -57,5 +57,13 @@ export async function createResource(resourceCreationData : ResourceCreationData
     url: "/resources",
     method: "POST",
     data: resourceCreationData
+  });
+}
+
+export async function refuel(pilotId : string, refuelParameters : RefuelParameters) : Promise<AxiosResponse> {
+  return await apiClient({
+    url: `/pilots/${pilotId}/refuel`,
+    method: "PUT",
+    data: refuelParameters
   });
 }

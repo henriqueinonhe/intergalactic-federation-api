@@ -12,6 +12,7 @@ import { ContractCreationData } from "../../src/services/ContractsService";
 import { Resource } from "../../src/entities/Resource";
 import { getConnection } from "typeorm";
 import { ResourceCreationData } from "../../src/services/ResourcesService";
+import Big from "big.js";
 
 export function randomMonthString() : string {
   return new RandExp(/(0[1-9])|10|11|12/).gen();
@@ -31,7 +32,7 @@ export function randomList<T>(generator : () => T, length : number) : Array<T> {
 
 export function randomShipCreationData() : ShipCreationData {
   const weightCapacity = randomNumber(1, 10000);
-  const fuelCapacity = randomNumber(1, 10000);
+  const fuelCapacity = randomNumber(100000, 10000000); //FIXME
   const currentWeight = randomNumber(1, weightCapacity);
   const fuelLevel = randomNumber(1, fuelCapacity);
 
@@ -74,7 +75,7 @@ export function randomPilotCreationData(currentLocationId : string, shipId ?: st
     certification: randomPilotCertification(),
     name: randomName(),
     age: randomSuitableAge(),
-    credits: randomPrecisionNumber(),
+    credits: Big(randomPrecisionNumber()).add("100000").toString(),
     currentLocationId,
     shipId
   };
