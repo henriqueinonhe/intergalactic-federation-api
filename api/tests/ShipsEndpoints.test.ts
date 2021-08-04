@@ -1,12 +1,10 @@
-import { ShipCreationData } from "../src/services/ShipsService";
-import { apiClient } from "./testHelpers/apiClient";
 import { clearDb, connection, populateDb, close } from "./testHelpers/db";
-import { AxiosResponse } from "axios";
 import { randomList, randomShipCreationData } from "./testHelpers/random";
 import { random as randomNumber } from "lodash";
 import { checkHasValidationErrorEntryCode } from "./testHelpers/validationErrors";
 import { DeepPartial, getConnection } from "typeorm";
 import { Ship } from "../src/entities/Ship";
+import { createShip } from "./testHelpers/endpoints";
 
 beforeAll(async () => {
   await connection();
@@ -24,14 +22,6 @@ describe("Create Ship", () => {
   afterAll(async () => {
     await clearDb();
   });
-
-  const createShip = async (shipCreationData : ShipCreationData) : Promise<AxiosResponse> => {
-    return await apiClient.request({
-      url: "/ships",
-      method: "POST",
-      data: shipCreationData
-    });
-  }; 
 
   describe("Pre Conditions", () => {
 

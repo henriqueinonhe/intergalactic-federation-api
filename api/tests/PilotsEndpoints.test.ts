@@ -1,18 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AxiosResponse } from "axios";
 import { sample, random as randomNumber } from "lodash";
-import { getConnection, getRepository, IsNull, Not, SimpleConsoleLogger } from "typeorm";
+import { getConnection, IsNull, Not } from "typeorm";
 import { Pilot } from "../src/entities/Pilot";
 import { Planet } from "../src/entities/Planet";
-import { PilotCreationData, TravelParameters } from "../src/services/PilotsService";
-import { apiClient } from "./testHelpers/apiClient";
+import { PilotCreationData } from "../src/services/PilotsService";
 import { clearDb, connection, populateDb, close } from "./testHelpers/db";
 import { randomList, randomPilotCreationData } from "./testHelpers/random";
 import { checkHasValidationErrorEntryCode } from "./testHelpers/validationErrors";
 import { v4 as uuid } from "uuid";
 import { Ship } from "../src/entities/Ship";
-import { TravellingData } from "../src/entities/TravellingData";
-import { Contract } from "../src/entities/Contract";
+import { createPilot, travel } from "./testHelpers/endpoints";
 
 beforeAll(async () => {
   await connection();
@@ -30,14 +27,6 @@ describe("Create Pilot", () => {
   afterAll(async () => {
     await clearDb();
   });
-
-  async function createPilot(pilotCreationData : PilotCreationData) : Promise<AxiosResponse> {
-    return await apiClient({
-      url: "/pilots",
-      method: "POST",
-      data: pilotCreationData
-    });
-  }
 
   async function randomPilotCreationDataWithDefaults() : Promise<PilotCreationData> {
     const connection = getConnection("Test Connection");
@@ -308,14 +297,6 @@ describe("Travel", () => {
     await clearDb();
   });
 
-  async function travel(pilotId : string, travelParameters : TravelParameters) : Promise<AxiosResponse> {
-    return await apiClient({
-      url: `/pilots/${pilotId}/travel`,
-      method: "PUT",
-      data: travelParameters
-    });
-  }
-
   async function randomExistingPlanet() : Promise<Planet> {
     const connection = getConnection("Test Connection");
     const planetsRepository = connection.getRepository(Planet);
@@ -580,3 +561,4 @@ describe("Accept Contract", () => {
     });
   });
 });
+

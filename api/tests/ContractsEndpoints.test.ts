@@ -1,17 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AxiosResponse } from "axios";
 import { sample, sampleSize, random as randomNumber } from "lodash";
 import RandExp from "randexp";
 import { DeepPartial, getConnection, IsNull, Not } from "typeorm";
 import { Contract } from "../src/entities/Contract";
 import { Planet } from "../src/entities/Planet";
 import { Resource } from "../src/entities/Resource";
-import { ContractCreationData, ContractStatus, GetContractsQuery } from "../src/services/ContractsService";
-import { apiClient } from "./testHelpers/apiClient";
+import { ContractCreationData, ContractStatus } from "../src/services/ContractsService";
 import { clearDb, connection, populateDb, close } from "./testHelpers/db";
 import { randomContractCreationData, randomList } from "./testHelpers/random";
 import { checkHasValidationErrorEntryCode } from "./testHelpers/validationErrors";
 import { v4 as uuid } from "uuid";
+import { createContract, getContracts } from "./testHelpers/endpoints";
 
 beforeAll(async () => {
   await connection();
@@ -29,14 +28,6 @@ describe("Get Contracts", () => {
   afterAll(async () => {
     await clearDb();
   });
-
-  const getContracts = async (query ?: GetContractsQuery) : Promise<AxiosResponse> => {
-    return await apiClient.request({
-      url: "/contracts",
-      method: "GET",
-      params: query
-    });
-  };
 
   describe("Pre Conditions", () => {
     const invalidStatuses = randomList(() => new RandExp(/\w{1,10}/).gen(), 40);
@@ -171,14 +162,6 @@ describe("Create Contract", () => {
   afterAll(async () => {
     await clearDb();
   });
-
-  const createContract = async (contractCreationData : ContractCreationData) : Promise<AxiosResponse> => {
-    return await apiClient.request({
-      url: "/contracts",
-      method: "POST",
-      data: contractCreationData
-    });
-  };
 
   async function randomContractCreationDataWithDefaults() : Promise<ContractCreationData> {
     const connection = getConnection("Test Connection");
