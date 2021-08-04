@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AxiosResponse } from "axios";
 import { sample, random as randomNumber } from "lodash";
-import { getConnection, IsNull, Not, SimpleConsoleLogger } from "typeorm";
+import { getConnection, getRepository, IsNull, Not, SimpleConsoleLogger } from "typeorm";
 import { Pilot } from "../src/entities/Pilot";
 import { Planet } from "../src/entities/Planet";
-import { PilotCreationData } from "../src/services/PilotsService";
+import { PilotCreationData, TravelParameters } from "../src/services/PilotsService";
 import { apiClient } from "./testHelpers/apiClient";
 import { clearDb, connection, populateDb, close } from "./testHelpers/db";
 import { randomList, randomPilotCreationData } from "./testHelpers/random";
 import { checkHasValidationErrorEntryCode } from "./testHelpers/validationErrors";
 import { v4 as uuid } from "uuid";
 import { Ship } from "../src/entities/Ship";
+import { TravellingData } from "../src/entities/TravellingData";
+import { Contract } from "../src/entities/Contract";
 
 beforeAll(async () => {
   await connection();
@@ -298,43 +300,206 @@ describe("Create Pilot", () => {
 });
 
 describe("Travel", () => {
-  describe("Pre Conditions", () => {
-    test("Pilot id parameter must reference an existing pilot", async () => {
-      //TODO
+  beforeAll(async () => {
+    await populateDb();
+  });
+  
+  afterAll(async () => {
+    await clearDb();
+  });
+
+  async function travel(pilotId : string, travelParameters : TravelParameters) : Promise<AxiosResponse> {
+    return await apiClient({
+      url: `/pilots/${pilotId}/travel`,
+      method: "PUT"
     });
+  }
+
+  async function randomExistingPlanet() : Promise<Planet> {
+    const connection = getConnection("Test Connection");
+    const planetsRepository = connection.getRepository(Planet);
+    return sample(await planetsRepository.find({}))!;
+  }
+
+  async function randomExistingPilotWithShip() : Promise<Pilot> {
+    const connection = getConnection("Test Connection");
+    const pilotsRepository = connection.getRepository(Pilot);
+    return sample(await pilotsRepository.find({
+      where: {
+        shipId: Not(IsNull())
+      }
+    }))!;
+  }
+
+  describe("Pre Conditions", () => {
+    const pilotsThatNeverWereIds = randomList(uuid, 10);
+    test.each(pilotsThatNeverWereIds)(
+      "Pilot id parameter must reference an existing pilot, case %s", 
+      async (pilotThatNeverWasId) => {
+        const response = await travel(pilotThatNeverWasId, {
+          destinationPlanetId: (await randomExistingPlanet()).id
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "PilotNotFound"));
+      }
+    );
 
     test("The referenced pilot must own a ship", async () => {
-      //TODO
+      const connection = getConnection("Test Connection");
+      const pilotsRepository = connection.getRepository(Pilot);
+      const shiplessPilots = await pilotsRepository.find({
+        where: {
+          shipId: IsNull()
+        }
+      });
+      const planet = await randomExistingPlanet();
+
+      const responses = await Promise.all(shiplessPilots
+        .map(pilot => travel(pilot.id, { destinationPlanetId: planet.id })));
+
+      responses.forEach(response => {
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "PilotHasNoShip"));
+      });
     });
 
-    test("Destination planet id parameter must reference an existing planet", async () => {
-      //TODO
-    });
+    const planetsThatNeverWereIds = randomList(uuid, 10);
+    test.each(planetsThatNeverWereIds)(
+      "Destination planet id parameter must reference an existing planet, %s", 
+      async (planetThatNeverWasId) => {
+        const pilot = await randomExistingPilotWithShip();
+
+        const response = await travel(pilot.id, {
+          destinationPlanetId: planetThatNeverWasId
+        });
+
+        expect(response.status).toBe(422);
+        const error = response.data.error;
+        expect(checkHasValidationErrorEntryCode(error, "PlanetNotFound"));
+      }
+    );
 
     test("Origin and destination planet must be different", async () => {
-      //TODO
+      const connection = getConnection("Test Connection");
+      const pilotsRepository = connection.getRepository(Pilot);
+      const planet = await randomExistingPlanet();
+      const pilotLocatedAtPlanet = await pilotsRepository.findOne({
+        where: {
+          shipId: Not(IsNull()),
+          currentLocationId: planet.id
+        }
+      });
+      const response = await travel(pilotLocatedAtPlanet!.id, {
+        destinationPlanetId: planet.id
+      });
+
+      expect(response.status).toBe(422);
+      const error = response.data.error;
+      expect(checkHasValidationErrorEntryCode(error, "OriginAndDestinationAreEqual"));
     });
 
-    test("It must be possible to travel from the origin planet to the destination planet", async () => {
-      //TODO
+    test("The 'route' between the origin and destination planets must exist", async () => {
+      //NOTE These travelling data and planet values are, in a certain sense,
+      //hardcoded, which is not good but will do for now
+
+      const connection = getConnection("Test Connection");
+      const pilotsRepository = connection.getRepository(Pilot);
+      const planetsRepository = connection.getRepository(Planet);
+      const demeter = (await planetsRepository.findOne({
+        name: "Demeter"
+      }))!;
+      const andvari = (await planetsRepository.findOne({
+        name: "Andvari"
+      }))!;
+      const pilotWithShip = (await pilotsRepository.findOne({
+        where: {
+          shipId: Not(IsNull())
+        }
+      }))!;
+      pilotWithShip.currentLocationId = demeter.id;
+      await pilotsRepository.save(pilotWithShip);
+      
+      const response = await travel(pilotWithShip.id, {
+        destinationPlanetId: andvari.id
+      });
+
+      expect(response.status).toBe(422);
+      const error = response.data.error;
+      expect(checkHasValidationErrorEntryCode(error, "TravelImpossible"));
     });
+
 
     test("There must be enough fuel in the ship", async () => {
-      //TODO
+      const connection = getConnection("Test Connection");
+      const pilotsRepository = connection.getRepository(Pilot);
+      const shipsRepository = connection.getRepository(Ship);
+      const planetsRepository = connection.getRepository(Planet);
+      const calas = (await planetsRepository.findOne({
+        name: "Calas"
+      }))!;
+      const andvari = (await planetsRepository.findOne({
+        name: "Andvari"
+      }))!;
+      const pilotWithShip = await pilotsRepository.findOne({
+        where: {
+          shipId: Not(IsNull())
+        },
+        relations: ["ship"]
+      }); 
+
+      const ship = pilotWithShip!.ship!;
+      ship.fuelLevel = 0;
+      pilotWithShip!.currentLocationId = calas.id;
+
+      await shipsRepository.save(ship);
+      await pilotsRepository.save(pilotWithShip!);
+
+      const response = await travel(pilotWithShip!.id, {
+        destinationPlanetId: andvari.id
+      });
+
+      expect(response.status).toBe(422);
+      const error = response.data.error;
+      expect(checkHasValidationErrorEntryCode(error, "NotEnoughFuel"));
     });
   });
 
   describe("Post Conditions", () => {
-    test("Ship fuel level is updated", async () => {
-      //TODO
-    });
+    test("Ship fuel level is updated, pilot current location is updated, eligible contracts are closed", async () => {
+      // const connection = getConnection("Test Connection");
+      // const pilotsRepository = connection.getRepository(Pilot);
+      // const shipsRepository = connection.getRepository(Ship);
+      // const planetsRepository = connection.getRepository(Planet);
+      // const contractsRepository = connection.getRepository(Contract);
+      // const calas = (await planetsRepository.findOne({
+      //   name: "Calas"
+      // }))!;
+      // const andvari = (await planetsRepository.findOne({
+      //   name: "Andvari"
+      // }))!;
+      // const pilotWithShip = await pilotsRepository.findOne({
+      //   where: {
+      //     shipId: Not(IsNull())
+      //   },
+      //   relations: ["ship"]
+      // });
 
-    test("Pilot current location is updated", async () => {
-      //TODO
-    });
+      // const ship = pilotWithShip!.ship!;
+      // ship.fuelLevel = 100000000;
+      // pilotWithShip!.currentLocationId = calas.id;
 
-    test("Eligible contracts are closed", async () => {
-      //TODO
+      // await shipsRepository.save(ship);
+      // await pilotsRepository.save(pilotWithShip!);
+
+      // const response = await travel(pilotWithShip!.id, {
+      //   destinationPlanetId: andvari.id
+      // });
+
+      // expect(response.status).toBe(200);
+
     });
   });
 });

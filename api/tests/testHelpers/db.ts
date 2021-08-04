@@ -56,7 +56,7 @@ export async function populateDb() : Promise<void> {
   const refillsRepository = connection.getRepository(Refill);
 
   const planets = await planetsRepository.find({});
-  const ships = randomList(randomShip, 40);
+  const ships = randomList(randomShip, 120);
 
   const unownedShips = ships.slice();
   const pilots = randomList(() => {
@@ -67,7 +67,7 @@ export async function populateDb() : Promise<void> {
       unownedShips.splice(unownedShips.findIndex(ship => ship.id === shipId), 1);
     }
     return randomPilot(locationPlanetId, shipId);
-  }, 20);
+  }, 50);
 
   const resources = randomList(randomResource, 500);
 
