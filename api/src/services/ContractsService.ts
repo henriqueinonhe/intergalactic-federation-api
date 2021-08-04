@@ -85,23 +85,23 @@ export class ContractsService {
     const validationErrorEntries : Array<ValidationErrorEntry> = [];
     const resourcesRepository = getRepository(Resource);
     const resources = await resourcesRepository.findByIds(payloadIds);
+    
+    const resourcesIds = resources.map(resource => resource.id);
+    const resourcesNotFoundIds = payloadIds
+      .filter(payloadId => resourcesIds.every(resourceId => resourceId !== payloadId));
 
-    const resourcesWithMetadata = zip(payloadIds, resources);
-
-    const resourcesNotFound = resourcesWithMetadata
-      .filter(([, resource]) => resource === undefined);
     validationErrorEntries.push(
-      ...resourcesNotFound.map(([payloadId]) => ({
+      ...resourcesNotFoundIds.map(payloadId => ({
         message: `There is no resource associated with this id "${payloadId}"!`,
         code: "ResourceNotFound"
       }))
     );
 
-    const resourcesAlreadyWithContract = resourcesWithMetadata
-      .filter(([, resource]) => resource?.contractId !== null);
+    const resourcesAlreadyWithContract = resources.filter(resource => resource.contractId !== null);
+
     validationErrorEntries.push(
-      ...resourcesAlreadyWithContract.map(([payloadId, resource]) => ({
-        message: `This resource ("${payloadId}") is already associated with a contract (contractId: "${resource?.contractId}")!`,
+      ...resourcesAlreadyWithContract.map(resource => ({
+        message: `This resource ("${resource.id}") is already associated with a contract (contractId: "${resource!.contractId}")!`,
         code: "ResourceAlreadyAssociatedWithContract"
       }))
     );

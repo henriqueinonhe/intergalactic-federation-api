@@ -11,6 +11,7 @@ import { Contract } from "../../src/entities/Contract";
 import { ContractCreationData } from "../../src/services/ContractsService";
 import { Resource } from "../../src/entities/Resource";
 import { getConnection } from "typeorm";
+import { ResourceCreationData } from "../../src/services/ResourcesService";
 
 export function randomMonthString() : string {
   return new RandExp(/(0[1-9])|10|11|12/).gen();
@@ -137,4 +138,11 @@ export function randomUndefinable<T>(value : T, undefinedProbability = 0.33) : T
   if(Math.random() > undefinedProbability) {
     return value;
   }
+}
+
+export function randomResourceCreationData() : ResourceCreationData {
+  return {
+    name: randomName(),
+    weight: randomNumber(1, 1000)
+  };
 }

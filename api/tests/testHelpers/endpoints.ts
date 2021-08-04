@@ -1,6 +1,7 @@
 import { AxiosResponse } from "axios";
 import { ContractCreationData, GetContractsQuery } from "../../src/services/ContractsService";
 import { PilotCreationData, TravelParameters } from "../../src/services/PilotsService";
+import { ResourceCreationData } from "../../src/services/ResourcesService";
 import { ShipCreationData } from "../../src/services/ShipsService";
 import { apiClient } from "./apiClient";
 
@@ -41,5 +42,20 @@ export async function travel(pilotId : string, travelParameters : TravelParamete
     url: `/pilots/${pilotId}/travel`,
     method: "PUT",
     data: travelParameters
+  });
+}
+
+export async function getPlanets() : Promise<AxiosResponse> {
+  return await apiClient({
+    url: `/planets`,
+    method: "GET"
+  });
+}
+
+export async function createResource(resourceCreationData : ResourceCreationData) : Promise<AxiosResponse> {
+  return await apiClient({
+    url: "/resources",
+    method: "POST",
+    data: resourceCreationData
   });
 }

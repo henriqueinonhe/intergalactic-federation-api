@@ -38,7 +38,7 @@ export class ResourcesService {
 
     const resourcesRepository = getRepository(Resource);
     const createdResource = resourcesRepository.create(resourceCreationData);
-    resourcesRepository.save(createdResource);
+    await resourcesRepository.save(createdResource);
 
     return createdResource;
   }
