@@ -2,7 +2,6 @@ import { Ship } from "../../src/entities/Ship";
 import { ShipCreationData } from "../../src/services/ShipsService";
 import { random as randomNumber } from "lodash";
 import RandExp from "randexp";
-import { getRepository } from "typeorm";
 import { Pilot } from "../../src/entities/Pilot";
 import { PilotCreationData } from "../../src/services/PilotsService";
 import { generateLuhnCheckDigit } from "../../src/helpers/luhn";
@@ -11,6 +10,7 @@ import { Refill } from "../../src/entities/Refill";
 import { Contract } from "../../src/entities/Contract";
 import { ContractCreationData } from "../../src/services/ContractsService";
 import { Resource } from "../../src/entities/Resource";
+import { getConnection } from "typeorm";
 
 export function randomMonthString() : string {
   return new RandExp(/(0[1-9])|10|11|12/).gen();
@@ -43,7 +43,8 @@ export function randomShipCreationData() : ShipCreationData {
 }
 
 export function randomShip() : Ship {
-  const shipsRepository = getRepository(Ship);
+  const connection = getConnection("Test Connection");
+  const shipsRepository = connection.getRepository(Ship);
   return shipsRepository.create({
     ...randomShipCreationData()
   });
@@ -79,14 +80,16 @@ export function randomPilotCreationData(currentLocationId : string, shipId ?: st
 }
 
 export function randomPilot(currentLocationId : string, shipId ?: string) : Pilot {
-  const pilotsRepository = getRepository(Pilot);
+  const connection = getConnection("Test Connection");
+  const pilotsRepository = connection.getRepository(Pilot);
   return pilotsRepository.create({
     ...randomPilotCreationData(currentLocationId, shipId)
   });
 }
 
 export function randomRefill(pilotId : string, maxAmount = 200) : Refill {
-  const refillsRepository = getRepository(Refill);
+  const connection = getConnection("Test Connection");
+  const refillsRepository = connection.getRepository(Refill);
   return refillsRepository.create({
     amount: randomNumber(1, maxAmount),
     pilotId
@@ -112,17 +115,25 @@ export function randomContractCreationData(originPlanetId : string,
 export function randomContract(originPlanetId : string, 
                                destinationPlanetId : string,
                                payloadIds : Array<string>) : Contract {
-  const contractsRepository = getRepository(Contract);
+                                 const connection = getConnection("Test Connection");
+  const contractsRepository = connection.getRepository(Contract);
   return contractsRepository.create({
     ...randomContractCreationData(originPlanetId, destinationPlanetId, payloadIds)
   });
 }
 
 export function randomResource(contractId ?: string) : Resource {
-  const resourcesRepository = getRepository(Resource);
+  const connection = getConnection("Test Connection");
+  const resourcesRepository = connection.getRepository(Resource);
   return resourcesRepository.create({
     name: randomName(),
     weight: randomNumber(1, 200),
     contractId: contractId
   });
+}
+
+export function randomUndefinable<T>(value : T, undefinedProbability = 0.33) : T | undefined {
+  if(Math.random() > undefinedProbability) {
+    return value;
+  }
 }
