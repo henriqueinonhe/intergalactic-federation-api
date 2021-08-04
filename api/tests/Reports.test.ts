@@ -1,3 +1,9 @@
+import { clearDb } from "./testHelpers/db";
+
+afterAll(async () => {
+  clearDb();
+});
+
 describe("Planets Resources Summary", () => {
   describe("Pre Conditions", () => {
     //None

@@ -1,3 +1,9 @@
+import { clearDb } from "./testHelpers/db";
+
+afterAll(async () => {
+  clearDb();
+});
+
 describe("Create Pilot", () => {
   describe("Pre Conditions", () => {
     test("Pilot certification must be a string with length 7 composed solely of digits", async () => {
@@ -160,6 +166,12 @@ describe("Accept Contract", () => {
   });
 
   describe("Post Conditions", () => {
+    test("Ship weight is updated", async () => {
+      //TODO
+    });
 
+    test("Contract contractee is updated", async () => {
+      //TODO
+    });
   });
 });

@@ -1,3 +1,9 @@
+import { clearDb } from "./testHelpers/db";
+
+afterAll(async () => {
+  clearDb();
+});
+
 describe("Get Contracts", () => {
   describe("Pre Conditions", () => {
     test("Contract status must be one of the possible statuses", async () => {

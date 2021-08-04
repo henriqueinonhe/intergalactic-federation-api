@@ -1,10 +1,11 @@
 import { clearDb } from "./testHelpers/db";
 
-afterAll(async () => {
-  clearDb();
-});
-
 describe("Create Ship", () => {
+  
+  afterAll(async () => {
+    clearDb();
+  });
+
   describe("Pre Conditions", () => {
     test("Fuel capacity must be a positive integer", async () => {
       //TODO
