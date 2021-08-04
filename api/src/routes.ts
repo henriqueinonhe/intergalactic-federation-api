@@ -2,6 +2,7 @@ import express from "express";
 import { ContractsController } from "./controllers/ContractsController";
 import { PilotsController } from "./controllers/PilotsController";
 import { ReportsController } from "./controllers/ReportsController";
+import { ResourcesController } from "./controllers/ResourcesController";
 import { ShipsController } from "./controllers/ShipsController";
 
 export const router = express.Router();
@@ -37,3 +38,7 @@ router.route("/reports/pilotsResourcesSummary")
 
 router.route("/reports/transactionsLedger")
   .get(ReportsController.getTransactionsLedger);
+
+//Resources
+router.route("/resources")
+  .post(ResourcesController.createResource);

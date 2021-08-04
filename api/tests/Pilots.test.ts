@@ -150,7 +150,7 @@ describe("Create Pilot", () => {
       []
     ];
     test.each(invalidPilotAges)(
-      "Pilot age must be an integer greater or equal than 18, case %s", 
+      "Pilot age must be an integer greater than or equal to 18, case %s", 
       async (invalidPilotAge) => {
         const response = await createPilot({
           ... await randomPilotCreationDataWithDefaults(),
@@ -311,7 +311,8 @@ describe("Travel", () => {
   async function travel(pilotId : string, travelParameters : TravelParameters) : Promise<AxiosResponse> {
     return await apiClient({
       url: `/pilots/${pilotId}/travel`,
-      method: "PUT"
+      method: "PUT",
+      data: travelParameters
     });
   }
 
@@ -382,7 +383,7 @@ describe("Travel", () => {
       }
     );
 
-    test("Origin and destination planet must be different", async () => {
+    test("Origin and destination planets must be different", async () => {
       const connection = getConnection("Test Connection");
       const pilotsRepository = connection.getRepository(Pilot);
       const planet = await randomExistingPlanet();

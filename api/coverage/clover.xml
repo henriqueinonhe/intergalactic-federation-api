@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1628098668483" clover="3.2.0">
-  <project timestamp="1628098668484" name="All files">
+<coverage generated="1628101905072" clover="3.2.0">
+  <project timestamp="1628101905072" name="All files">
     <metrics statements="168" coveredstatements="156" conditionals="24" coveredconditionals="11" methods="52" coveredmethods="48" elements="244" coveredelements="215" complexity="0" loc="168" ncloc="168" packages="3" files="11" classes="11"/>
     <package name="src">
       <metrics statements="8" coveredstatements="7" conditionals="2" coveredconditionals="1" methods="0" coveredmethods="0"/>
@@ -77,8 +77,8 @@
         <line num="67" count="1" type="stmt"/>
         <line num="73" count="1" type="stmt"/>
         <line num="79" count="1" type="stmt"/>
-        <line num="82" count="557" type="cond" truecount="1" falsecount="1"/>
-        <line num="83" count="557" type="stmt"/>
+        <line num="82" count="508" type="cond" truecount="1" falsecount="1"/>
+        <line num="83" count="508" type="stmt"/>
         <line num="86" count="1" type="stmt"/>
       </file>
       <file name="Planet.ts" path="/home/app/src/entities/Planet.ts">
@@ -100,8 +100,8 @@
         <line num="31" count="1" type="stmt"/>
         <line num="37" count="1" type="stmt"/>
         <line num="43" count="1" type="stmt"/>
-        <line num="46" count="529" type="cond" truecount="1" falsecount="1"/>
-        <line num="47" count="529" type="stmt"/>
+        <line num="46" count="549" type="cond" truecount="1" falsecount="1"/>
+        <line num="47" count="549" type="stmt"/>
         <line num="50" count="1" type="stmt"/>
       </file>
       <file name="Refill.ts" path="/home/app/src/entities/Refill.ts">
@@ -182,7 +182,7 @@
         <metrics statements="4" coveredstatements="4" conditionals="4" coveredconditionals="2" methods="2" coveredmethods="2"/>
         <line num="2" count="1" type="stmt"/>
         <line num="4" count="1" type="stmt"/>
-        <line num="5" count="425" type="cond" truecount="1" falsecount="1"/>
+        <line num="5" count="371" type="cond" truecount="1" falsecount="1"/>
         <line num="6" count="264" type="cond" truecount="1" falsecount="1"/>
       </file>
       <file name="luhn.ts" path="/home/app/src/helpers/luhn.ts">
@@ -199,13 +199,13 @@
         <line num="15" count="0" type="stmt"/>
         <line num="16" count="0" type="stmt"/>
         <line num="19" count="1" type="stmt"/>
-        <line num="20" count="1302" type="stmt"/>
-        <line num="21" count="217" type="stmt"/>
-        <line num="22" count="651" type="stmt"/>
-        <line num="23" count="651" type="cond" truecount="2" falsecount="0"/>
-        <line num="24" count="651" type="stmt"/>
-        <line num="27" count="1302" type="stmt"/>
-        <line num="28" count="217" type="stmt"/>
+        <line num="20" count="1332" type="stmt"/>
+        <line num="21" count="222" type="stmt"/>
+        <line num="22" count="666" type="stmt"/>
+        <line num="23" count="666" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="666" type="stmt"/>
+        <line num="27" count="1332" type="stmt"/>
+        <line num="28" count="222" type="stmt"/>
       </file>
       <file name="precisionNumbers.ts" path="/home/app/src/helpers/precisionNumbers.ts">
         <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
