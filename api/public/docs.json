@@ -23,7 +23,7 @@
   ],
   "servers": [
     {
-      "url": "http://localhost:3001"
+      "url": "https://localhost:3001"
     }
   ],
   "paths": {
@@ -47,8 +47,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {}
+                "$ref": "#/components/schemas/PilotCreationData"
               }
             },
             "application/xml": {
@@ -67,7 +66,8 @@
         },
         "tags": [
           "Pilots"
-        ]
+        ],
+        "description": "Registers a new pilot in the system.\n\nPre Conditions:\n- Certification must be a 7 digit string and must conform to Luhn's validation\n- Certification must be unique\n- Pilot name must be a non empty string composed solely of letters and whitespace\n- Pilot age must be an integer greater than or equal to 18\n- Pilot credits must be a string representing a number with up to 4 decimal places\n- Pilot current location id must reference an existing planet\n- Pilot ship id, when not null, must reference a an existing and unowned ship\n"
       }
     },
     "/ships": {
@@ -97,7 +97,8 @@
         },
         "tags": [
           "Ships"
-        ]
+        ],
+        "description": "Registers a ship in the system:\n\nPre Conditions:\n- Fuel capacity must be a positive integer\n- Fuel level must be a zero or positive integer and less than fuel capacity\n- Weight capacity must be a positive integer\n- Current weight must be a zero or positive integer and less than weight capacity\n- Value must be a string representing a number with up to 4 decimal places"
       }
     },
     "/contracts": {
@@ -127,7 +128,8 @@
         },
         "tags": [
           "Contracts"
-        ]
+        ],
+        "description": "Creates a new contract.\n\nPre Conditions:\n- Contract description must be a non empty string\n- Payloads ids must be a non empty string array and these ids must reference existing \nresources that aren't attached to any other contract yet\n- Origin planet id must reference an existing planet\n- Destination planet id must reference an existing planet\n- "
       },
       "get": {
         "summary": "",
@@ -165,12 +167,14 @@
               "type": "string"
             },
             "in": "query",
-            "name": "status"
+            "name": "status",
+            "description": "One of: \"Any\", \"Open\", \"Fulfilled\", \"In Effect\""
           }
         ],
         "tags": [
           "Contracts"
-        ]
+        ],
+        "description": "Retrieves contracts."
       }
     },
     "/pilots/{id}/travel": {
@@ -196,7 +200,7 @@
                 "type": "object",
                 "properties": {
                   "destinationPlanetId": {
-                    "$ref": "#/components/schemas/Planet"
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -208,7 +212,8 @@
         },
         "tags": [
           "Pilots"
-        ]
+        ],
+        "description": "Performs a travel action.\n\nPre Conditions:\n- Pilot id parameter must reference an existing pilot\n- The referenced pilot must own a ship\n- Destination planet id parameter must reference an existing planet\n- Origin and destination planets must be different\n- The 'route' between the origin and destination planets must exist\n- There must be enough fuel in the ship to do the trip"
       },
       "parameters": [
         {
@@ -267,7 +272,8 @@
         },
         "tags": [
           "Pilots"
-        ]
+        ],
+        "description": "Pre Conditions:\n- Amount must be a positive integer\n- Pilot id must reference an existing pilot\n- The referenced pilot must own a ship and must have sufficient funds for the refuel\n- Ship must have enough room for the new fuel"
       }
     },
     "/pilots/{id}/acceptContract": {
@@ -315,7 +321,8 @@
         },
         "tags": [
           "Pilots"
-        ]
+        ],
+        "description": "Pre Conditions:\n- Pilot id must reference an existing pilot\n- Referenced pilot must own a ship\n- Contract id must reference an existing contract\n- Contract must be still open\n- Pilot must be in the contract's origin planet to accept it\n- Contract's payload weight must be within the current ship capacity"
       }
     },
     "/reports/planetsResourcesSummary": {
@@ -452,7 +459,7 @@
                         "type": "string"
                       },
                       "value": {
-                        "type": "number"
+                        "type": "string"
                       }
                     },
                     "required": [
@@ -466,6 +473,37 @@
           }
         },
         "operationId": "get-reports-transactionsLedger"
+      }
+    },
+    "/resources": {
+      "post": {
+        "summary": "",
+        "operationId": "post-resources",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resource"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Resources"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResourceCreationData"
+              }
+            }
+          }
+        },
+        "description": "Pre Conditions:\n- Name must be a non empty string\n- Weight must be a zero or positive integer"
       }
     }
   },
@@ -488,7 +526,7 @@
             "type": "number"
           },
           "credits": {
-            "type": "number"
+            "type": "string"
           },
           "currentLocation": {
             "$ref": "#/components/schemas/Planet"
@@ -496,7 +534,6 @@
           "ship": {
             "oneOf": [
               {
-                "properties": {},
                 "nullable": true
               },
               {
@@ -562,12 +599,11 @@
             "$ref": "#/components/schemas/Planet"
           },
           "value": {
-            "type": "number"
+            "type": "string"
           },
           "contractee": {
             "oneOf": [
               {
-                "properties": {},
                 "nullable": true
               },
               {
@@ -635,7 +671,7 @@
           "name"
         ]
       },
-      "TravelData": {
+      "TravellingData": {
         "title": "TravelData",
         "type": "object",
         "properties": {
@@ -674,7 +710,7 @@
             "type": "number"
           },
           "credits": {
-            "type": "number"
+            "type": "string"
           },
           "currentLocationId": {
             "type": "string"
@@ -703,19 +739,23 @@
           },
           "weightCapacity": {
             "type": "number"
+          },
+          "currentWeight": {
+            "type": "number"
           }
         },
         "required": [
           "fuelCapacity",
           "fuelLevel",
-          "weightCapacity"
+          "weightCapacity",
+          "currentWeight"
         ]
       },
       "ContractCreationData": {
         "title": "ContractCreationData",
         "type": "object",
         "properties": {
-          "descripton": {
+          "description": {
             "type": "string"
           },
           "payloadIds": {
@@ -731,11 +771,11 @@
             "type": "string"
           },
           "value": {
-            "type": "number"
+            "type": "string"
           }
         },
         "required": [
-          "descripton",
+          "description",
           "payloadIds",
           "originPlanetId",
           "destinationPlanetId",
@@ -756,6 +796,22 @@
         "required": [
           "nextPageLink",
           "previousPageLink"
+        ]
+      },
+      "ResourceCreationData": {
+        "title": "ResourceCreationData",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "weight"
         ]
       }
     }
