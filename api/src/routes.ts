@@ -1,6 +1,7 @@
 import express from "express";
 import { ContractsController } from "./controllers/ContractsController";
 import { PilotsController } from "./controllers/PilotsController";
+import { PlanetsController } from "./controllers/PlanetsController";
 import { ReportsController } from "./controllers/ReportsController";
 import { ResourcesController } from "./controllers/ResourcesController";
 import { ShipsController } from "./controllers/ShipsController";
@@ -42,3 +43,7 @@ router.route("/reports/transactionsLedger")
 //Resources
 router.route("/resources")
   .post(ResourcesController.createResource);
+
+//Planets
+router.route("/planets")
+  .get(PlanetsController.getPlanets);
