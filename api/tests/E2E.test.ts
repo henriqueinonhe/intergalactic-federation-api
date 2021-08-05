@@ -1,5 +1,5 @@
 import Big from "big.js";
-import { sample, sampleSize, zip, random as randomNumber, isEqual } from "lodash";
+import { sample, sampleSize, zip, random as randomNumber, isEqual, sortBy } from "lodash";
 import { Contract } from "../src/entities/Contract";
 import { Pilot } from "../src/entities/Pilot";
 import { Planet } from "../src/entities/Planet";
@@ -7,9 +7,9 @@ import { Resource } from "../src/entities/Resource";
 import { Ship } from "../src/entities/Ship";
 import { ContractCreationData } from "../src/services/ContractsService";
 import { PilotsService } from "../src/services/PilotsService";
-import { TransactionsLedger } from "../src/services/ReportsService";
+import { PilotsResourcesSummary, PlanetsResourcesSummary, TransactionsLedger } from "../src/services/ReportsService";
 import { clearDb, close, connection } from "./testHelpers/db";
-import { acceptContract, createContract, createPilot, createResource, createShip, getContracts, getPlanets, refuel, transactionsLedger, travel } from "./testHelpers/endpoints";
+import { acceptContract, createContract, createPilot, createResource, createShip, getContracts, getPlanets, pilotsResourcesSummary, planetsResourcesSummary, refuel, transactionsLedger, travel } from "./testHelpers/endpoints";
 import { randomContractCreationData, randomList, randomPilotCreationData, randomResourceCreationData, randomShipCreationData } from "./testHelpers/random";
 
 beforeAll(async () => {
@@ -396,7 +396,47 @@ test("Full application flow", async () => {
   /**************/
   /**************/
 
-  // Transactions ledger
+  // Planets Resources Summary
+  // Transfered resources stems from the
+  // fulfilled contract
+  const fulfilledContractResources = acceptedContract.payload;
+  const fulfilledContractOrigin = acceptedContract.originPlanet!.name;
+  const fulfilledContractDestination = acceptedContract.destinationPlanet!.name;
+  const fulfilledContractFormattedResources : Record<string, string> = {};
+  for(const resource of fulfilledContractResources) {
+    fulfilledContractFormattedResources[resource.name] = resource.weight.toString();
+  }
+  
+  const planetsResourcesSummaryData = (await planetsResourcesSummary()).data as PlanetsResourcesSummary;
+
+  expect(planetsResourcesSummaryData.some(entry => {
+    isEqual(entry, {
+      planet: fulfilledContractOrigin,
+      sent: fulfilledContractFormattedResources
+    });
+  }));
+
+  expect(planetsResourcesSummaryData.some(entry => {
+    isEqual(entry, {
+      planet: fulfilledContractDestination,
+      received: fulfilledContractFormattedResources
+    });
+  }));
+
+  // Pilots Resources Summary
+  // Transfered resources stems from the
+  // fulfilled contract
+  const pilotsResourcesSummaryData = (await pilotsResourcesSummary()).data as PilotsResourcesSummary;
+
+  expect(pilotsResourcesSummaryData.some(entry => {
+    entry.pilot === createdPilot.name &&
+    isEqual(sortBy(entry.resources), fulfilledContractResources.map(e => ({
+      name: e.name,
+      weight: e.weight
+    })));
+  }));
+
+  // Transactions Ledger
   // Both our fulfilled contract and refuel
   // must be registered in the transactions ledger.
   const transactionsLedgerData = (await transactionsLedger()).data as TransactionsLedger;

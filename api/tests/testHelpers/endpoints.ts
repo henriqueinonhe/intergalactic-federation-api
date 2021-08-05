@@ -83,3 +83,17 @@ export async function transactionsLedger() : Promise<AxiosResponse> {
     method: "GET"
   });
 }
+
+export async function planetsResourcesSummary() : Promise<AxiosResponse> {
+  return await apiClient({
+    url: `/reports/planetsResourcesSummary`,
+    method: "GET"
+  });
+}
+
+export async function pilotsResourcesSummary() : Promise<AxiosResponse> {
+  return await apiClient({
+    url: `/reports/pilotsResourcesSummary`,
+    method: "GET"
+  });
+}

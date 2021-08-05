@@ -445,7 +445,11 @@ export class PilotsService {
 
     const contractsRepository = getRepository(Contract);
     const contract = await contractsRepository.findOne(contractId, {
-      relations: ["payload"]
+      relations: [
+        "payload",
+        "originPlanet",
+        "destinationPlanet"
+      ]
     });
     if(!contract) {
       validationError.addEntries({
