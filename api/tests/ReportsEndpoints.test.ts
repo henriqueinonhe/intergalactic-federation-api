@@ -1,9 +1,12 @@
-import { clearDb } from "./testHelpers/db";
+import { connection, close } from "./testHelpers/db";
 
-afterAll(async () => {
-  clearDb();
+beforeAll(async () => {
+  await connection();
 });
 
+afterAll(async () => {
+  await close();
+});
 describe("Planets Resources Summary", () => {
   describe("Pre Conditions", () => {
     //None

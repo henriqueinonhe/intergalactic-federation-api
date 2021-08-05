@@ -39,13 +39,11 @@ test("Full application flow", async () => {
   // currentWeight is less than weightCapacity
   // and so on.
   const shipCreationData = randomShipCreationData();
-  console.log(shipCreationData);
 
   // Then we call the ship creation endpoint,
   // which upon completion, conveniently
   // returns the created ship instance.
   const createdShip = (await createShip(shipCreationData)).data as Ship;
-  console.log(createdShip);
   
   // Now we check that the created ship data
   // actually reflects the data we sent.
@@ -71,13 +69,11 @@ test("Full application flow", async () => {
     pilotInitialPlanet.id, 
     createdShip.id
   );
-  console.log(pilotCreationData);
 
   // Now we can call the create pilot endpoint
   // which also conveniently returns the created
   // pilot instance.
   const createdPilot = (await createPilot(pilotCreationData)).data as Pilot;
-  console.log(createdPilot);
   
   // Checking the created pilot reflects the sent data.
   expect(createdPilot).toMatchObject(pilotCreationData);
@@ -453,5 +449,4 @@ test("Full application flow", async () => {
       value: `-${creditsSpent.toString()}`
     });
   }));
-  console.log(transactionsLedgerData);
 });
