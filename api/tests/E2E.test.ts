@@ -8,7 +8,7 @@ import { Ship } from "../src/entities/Ship";
 import { ContractCreationData } from "../src/services/ContractsService";
 import { PilotsService } from "../src/services/PilotsService";
 import { PilotsResourcesSummary, PlanetsResourcesSummary, TransactionsLedger } from "../src/services/ReportsService";
-import { clearDb, close, connection } from "./testHelpers/db";
+import { close, connection } from "./testHelpers/db";
 import { acceptContract, createContract, createPilot, createResource, createShip, getContracts, getPlanets, pilotsResourcesSummary, planetsResourcesSummary, refuel, transactionsLedger, travel } from "./testHelpers/endpoints";
 import { randomContractCreationData, randomList, randomPilotCreationData, randomResourceCreationData, randomShipCreationData } from "./testHelpers/random";
 

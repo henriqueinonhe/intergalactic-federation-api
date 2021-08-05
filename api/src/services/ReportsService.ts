@@ -1,6 +1,4 @@
 import { getConnection } from "typeorm";
-import { Pilot } from "../entities/Pilot";
-import { Planet } from "../entities/Planet";
 import { PilotsService } from "./PilotsService";
 
 export type PlanetsResourcesSummary = Array<{

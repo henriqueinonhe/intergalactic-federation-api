@@ -6,7 +6,7 @@ import { Pilot } from "../entities/Pilot";
 import { Planet } from "../entities/Planet";
 import { Ship } from "../entities/Ship";
 import { TravellingData } from "../entities/TravellingData";
-import { ValidationErrorEntry, ValidationError } from "../exceptions/ValidationError";
+import { ValidationError } from "../exceptions/ValidationError";
 import { isLuhnValid } from "../helpers/luhn";
 import { precisionNumberRegex } from "../helpers/precisionNumbers";
 import Big from "big.js";

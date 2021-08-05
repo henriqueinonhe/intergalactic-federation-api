@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { upperFirst, zip } from "lodash";
+import { upperFirst } from "lodash";
 import { getRepository, IsNull, Not } from "typeorm";
 import { Contract } from "../entities/Contract";
 import { Planet } from "../entities/Planet";

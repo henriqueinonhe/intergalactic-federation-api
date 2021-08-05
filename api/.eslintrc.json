@@ -1,5 +1,5 @@
 {
-  "ignorePatterns": "scripts",
+  "ignorePatterns": ["scripts", "public", "dist", "scripts"],
   "env": {
       "es2020": true,
       "node": true
