@@ -1,5 +1,5 @@
 import Big from "big.js";
-import { sample, sampleSize, zip, random as randomNumber } from "lodash";
+import { sample, sampleSize, zip, random as randomNumber, isEqual } from "lodash";
 import { Contract } from "../src/entities/Contract";
 import { Pilot } from "../src/entities/Pilot";
 import { Planet } from "../src/entities/Planet";
@@ -7,8 +7,9 @@ import { Resource } from "../src/entities/Resource";
 import { Ship } from "../src/entities/Ship";
 import { ContractCreationData } from "../src/services/ContractsService";
 import { PilotsService } from "../src/services/PilotsService";
+import { TransactionsLedger } from "../src/services/ReportsService";
 import { clearDb, close, connection } from "./testHelpers/db";
-import { acceptContract, createContract, createPilot, createResource, createShip, getContracts, getPlanets, refuel, travel } from "./testHelpers/endpoints";
+import { acceptContract, createContract, createPilot, createResource, createShip, getContracts, getPlanets, refuel, transactionsLedger, travel } from "./testHelpers/endpoints";
 import { randomContractCreationData, randomList, randomPilotCreationData, randomResourceCreationData, randomShipCreationData } from "./testHelpers/random";
 
 beforeAll(async () => {
@@ -16,7 +17,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await clearDb();
+  // await clearDb();
   await close();
 });
 
@@ -388,4 +389,29 @@ test("Full application flow", async () => {
   expect(acceptedContractPilotCredits.add(acceptedContractValue).toString()).toBe(fulfilledContractPilotCredits.toString());
 
   expect(fueledShipWeight).toBe(fulfilledContractShip.currentWeight);
+
+  /**************/
+  /**************/
+  /* 8. Reports */
+  /**************/
+  /**************/
+
+  // Transactions ledger
+  // Both our fulfilled contract and refuel
+  // must be registered in the transactions ledger.
+  const transactionsLedgerData = (await transactionsLedger()).data as TransactionsLedger;
+  expect(transactionsLedgerData.some(entry => {
+    return isEqual(entry, {
+      description: `${createdPilot.name} bought fuel`,
+      value: creditsSpent.toString()
+    });
+  }));
+
+  expect(transactionsLedgerData.some(entry => {
+    return isEqual(entry, {
+      description: `Contract ${acceptedContract.id}, ${acceptedContract.description}`,
+      value: `-${creditsSpent.toString()}`
+    });
+  }));
+  console.log(transactionsLedgerData);
 });

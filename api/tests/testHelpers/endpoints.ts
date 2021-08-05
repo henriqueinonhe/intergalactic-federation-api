@@ -76,3 +76,10 @@ export async function acceptContract(pilotId : string, acceptContractParameters 
     data: acceptContractParameters
   });
 }
+
+export async function transactionsLedger() : Promise<AxiosResponse> {
+  return await apiClient({
+    url: `/reports/transactionsLedger`,
+    method: "GET"
+  });
+}
