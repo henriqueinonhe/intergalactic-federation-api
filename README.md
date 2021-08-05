@@ -46,16 +46,18 @@ Then run migrations and seeder:
 
 ```sh
 docker exec -ti intergalactic_federation_api sh
+```
 
+```sh
 #Inside container
 npx typeorm migration:run
 node ./scripts/seedDb.js
 ```
 
-<!-- Reset service:
+Reset service:
 ```sh
-docker restart InvestmentsAPI
-``` -->
+docker restart intergalactic_federation_api
+```
 
 API -> `https://localhost:3001`
 DB -> `localhost:3306`
@@ -196,6 +198,12 @@ npx typeorm migration:run
 node ./scripts/seedDb.js
 ```
 
+Then restart the container so TypeORM can pickup entities metadata.
+
+```sh
+docker restart intergalactic_federation_api
+```
+
 You may also run them from outside the container, you just need to compile the code and change `TYPEORM_HOST` environment variable so that it points to the DB from outside the container:
 
 ```sh
@@ -204,6 +212,7 @@ npx tsc -p .
 
 #Run migrations
 npx typeorm migration:run
+node ./scripts/seedDb.js
 ```
 
 ## 5 Running
